@@ -53,7 +53,7 @@ class DataAugmentor(object):
     def __setstate__(self, d):
         self.__dict__.update(d)
 
-    def random_world_flip(self, data_dict=None, config=None):
+    def random_world_flip(self, data_dict=None, config=None, Target = False):
         if data_dict is None:
             return partial(self.random_world_flip, config=config)
         gt_boxes, points = data_dict['gt_boxes'], data_dict['points']
@@ -74,7 +74,7 @@ class DataAugmentor(object):
         data_dict['points'] = points
         return data_dict
 
-    def random_world_rotation(self, data_dict=None, config=None):
+    def random_world_rotation(self, data_dict=None, config=None, Target = False):
         if data_dict is None:
             return partial(self.random_world_rotation, config=config)
         rot_range = config['WORLD_ROT_ANGLE']
@@ -94,7 +94,7 @@ class DataAugmentor(object):
         data_dict['noise_rot'] = noise_rot
         return data_dict
 
-    def random_world_scaling(self, data_dict=None, config=None):
+    def random_world_scaling(self, data_dict=None, config=None, Target = False):
         if data_dict is None:
             return partial(self.random_world_scaling, config=config)
         
@@ -113,7 +113,7 @@ class DataAugmentor(object):
         data_dict['noise_scale'] = noise_scale
         return data_dict
 
-    def random_image_flip(self, data_dict=None, config=None):
+    def random_image_flip(self, data_dict=None, config=None, Target = False):
         if data_dict is None:
             return partial(self.random_image_flip, config=config)
         images = data_dict["images"]
@@ -287,7 +287,7 @@ class DataAugmentor(object):
         data_dict["camera_imgs"] = new_imgs
         return data_dict
 
-    def forward(self, data_dict):
+    def forward(self, data_dict, Target= False):
         """
         Args:
             data_dict:
@@ -299,7 +299,7 @@ class DataAugmentor(object):
         Returns:
         """
         for cur_augmentor in self.data_augmentor_queue:
-            data_dict = cur_augmentor(data_dict=data_dict)
+            data_dict = cur_augmentor(data_dict=data_dict, Target = Target)
 
         data_dict['gt_boxes'][:, 6] = common_utils.limit_period(
             data_dict['gt_boxes'][:, 6], offset=0.5, period=2 * np.pi

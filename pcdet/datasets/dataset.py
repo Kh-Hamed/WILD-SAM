@@ -19,6 +19,9 @@ class DatasetTemplate(torch_data.Dataset):
         self.class_names = class_names
         self.logger = logger
         self.root_path = root_path if root_path is not None else Path(self.dataset_cfg.DATA_PATH)
+        ##############################################################################################
+        self.root_path_T = Path(self.dataset_cfg.DATA_PATH_T)
+        ##############################################################################################
         self.logger = logger
         if self.dataset_cfg is None or class_names is None:
             return
@@ -155,7 +158,7 @@ class DatasetTemplate(torch_data.Dataset):
         data_dict['lidar_aug_matrix'] = lidar_aug_matrix
         return data_dict
 
-    def prepare_data(self, data_dict):
+    def prepare_data(self, data_dict, Target= False):
         """
         Args:
             data_dict:
@@ -186,7 +189,7 @@ class DatasetTemplate(torch_data.Dataset):
                 data_dict={
                     **data_dict,
                     'gt_boxes_mask': gt_boxes_mask
-                }
+                }, Target = Target
             )
             if 'calib' in data_dict:
                 data_dict['calib'] = calib
@@ -196,7 +199,7 @@ class DatasetTemplate(torch_data.Dataset):
             data_dict['gt_boxes'] = data_dict['gt_boxes'][selected]
             data_dict['gt_names'] = data_dict['gt_names'][selected]
             gt_classes = np.array([self.class_names.index(n) + 1 for n in data_dict['gt_names']], dtype=np.int32)
-            gt_boxes = np.concatenate((data_dict['gt_boxes'], gt_classes.reshape(-1, 1).astype(np.float32)), axis=1)
+            gt_boxes = np.concatenate((data_dict['gt_boxes'].reshape(-1, 7), gt_classes.reshape(-1, 1).astype(np.float32)), axis=1)
             data_dict['gt_boxes'] = gt_boxes
 
             if data_dict.get('gt_boxes2d', None) is not None:
@@ -220,10 +223,23 @@ class DatasetTemplate(torch_data.Dataset):
     @staticmethod
     def collate_batch(batch_list, _unused=False):
         data_dict = defaultdict(list)
-        for cur_sample in batch_list:
-            for key, val in cur_sample.items():
-                data_dict[key].append(val)
-        batch_size = len(batch_list)
+        # for cur_sample in batch_list:
+        #     for key, val in cur_sample.items():
+        #         data_dict[key].append(val)
+        # batch_size = len(batch_list)
+        # ret = {}
+        # batch_size_ratio = 1
+
+        bs= 0
+        bs_s= len(batch_list)
+        for i in range(2):
+            for cur_sample_S_Target in batch_list:
+                if len(cur_sample_S_Target) > i:
+                    for key, val in cur_sample_S_Target[i].items():
+                        data_dict[key].append(val)
+                    bs +=1
+        # batch_size = len(batch_list)
+        batch_size = bs
         ret = {}
         batch_size_ratio = 1
 
@@ -322,4 +338,5 @@ class DatasetTemplate(torch_data.Dataset):
                 raise TypeError
 
         ret['batch_size'] = batch_size * batch_size_ratio
+        ret['bs_s'] = bs_s
         return ret

@@ -60,6 +60,56 @@ class DataBaseSampler(object):
                 'pointer': len(self.db_infos[class_name]),
                 'indices': np.arange(len(self.db_infos[class_name]))
             }
+        ##############################################################################################
+        # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
+        self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo/'
+        self.db_infos_T = {}
+        for class_name in class_names:
+            self.db_infos_T[class_name] = []
+        # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
+        with open(str(db_info_T), 'rb') as f:
+            infos_T = pickle.load(f)
+            [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]
+
+        self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
+        weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
+        for cur_class in class_names:
+            info_T_cls = self.db_infos_T[cur_class]
+            summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
+            sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
+            mn = np.mean(sorted_summer_points)
+            std = np.std(sorted_summer_points)
+            high_th = np.floor(mn  +  3 * std)
+            sorted_summer_points_thre = sorted_summer_points[(sorted_summer_points>=5) & (sorted_summer_points<=high_th)]
+            unique_sorted_summer_points= np.unique(sorted_summer_points_thre)
+            summer_weights = np.linspace(weight[cur_class], 1.0, len(unique_sorted_summer_points))
+            summer_weights = {element: summer_weights[idx] for idx, element in enumerate(unique_sorted_summer_points)}
+            weights = []
+            for i, element in enumerate(sorted_summer_points):
+                if element > high_th:
+                    weights.append(1)
+                else:
+                    weights.append(summer_weights[element])
+            num_points_in_gt_T = np.floor(np.maximum(sorted_summer_points * weights, 5)).astype(int)
+            for i, ind in enumerate(sorted_indices):
+                info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
+
+        self.sample_groups_T = {}
+        self.sample_class_num_T = {}
+        self.limit_whole_scene_T = sampler_cfg.get('LIMIT_WHOLE_SCENE', False)
+        self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
+        for x in sampler_cfg.SAMPLE_GROUPS:
+            class_name, sample_num = x.split(':')
+            if class_name not in class_names:
+                continue
+            self.sample_class_num_T[class_name] = sample_num
+            self.sample_groups_T[class_name] = {
+                'sample_num': sample_num,
+                'pointer': len(self.db_infos_T[class_name]),
+                'indices': np.arange(len(self.db_infos_T[class_name]))
+            }
+        ##############################################################################################
 
     def __getstate__(self):
         d = dict(self.__dict__)
@@ -127,7 +177,7 @@ class DataBaseSampler(object):
 
         return db_infos
 
-    def sample_with_fixed_number(self, class_name, sample_group):
+    def sample_with_fixed_number(self, class_name, sample_group, Target = False):
         """
         Args:
             class_name:
@@ -135,15 +185,27 @@ class DataBaseSampler(object):
         Returns:
 
         """
-        sample_num, pointer, indices = int(sample_group['sample_num']), sample_group['pointer'], sample_group['indices']
-        if pointer >= len(self.db_infos[class_name]):
-            indices = np.random.permutation(len(self.db_infos[class_name]))
-            pointer = 0
+        if Target is False:
+            sample_num, pointer, indices = int(sample_group['sample_num']), sample_group['pointer'], sample_group['indices']
+            if pointer >= len(self.db_infos[class_name]):
+                indices = np.random.permutation(len(self.db_infos[class_name]))
+                pointer = 0
 
-        sampled_dict = [self.db_infos[class_name][idx] for idx in indices[pointer: pointer + sample_num]]
-        pointer += sample_num
-        sample_group['pointer'] = pointer
-        sample_group['indices'] = indices
+            sampled_dict = [self.db_infos[class_name][idx] for idx in indices[pointer: pointer + sample_num]]
+            pointer += sample_num
+            sample_group['pointer'] = pointer
+            sample_group['indices'] = indices
+        else:
+            sample_num, pointer, indices = int(sample_group['sample_num']), sample_group['pointer'], sample_group['indices']
+            if pointer >= len(self.db_infos_T[class_name]):
+                indices = np.random.permutation(len(self.db_infos_T[class_name]))
+                pointer = 0
+
+            sampled_dict = [self.db_infos_T[class_name][idx] for idx in indices[pointer: pointer + sample_num]]
+            pointer += sample_num
+            sample_group['pointer'] = pointer
+            sample_group['indices'] = indices           
+
         return sampled_dict
 
     @staticmethod
@@ -362,7 +424,7 @@ class DataBaseSampler(object):
             raise NotImplementedError
         return data_dict
 
-    def add_sampled_boxes_to_scene(self, data_dict, sampled_gt_boxes, total_valid_sampled_dict, mv_height=None, sampled_gt_boxes2d=None):
+    def add_sampled_boxes_to_scene(self, data_dict, sampled_gt_boxes, total_valid_sampled_dict, mv_height=None, sampled_gt_boxes2d=None, Target= False):
         gt_boxes_mask = data_dict['gt_boxes_mask']
         gt_boxes = data_dict['gt_boxes'][gt_boxes_mask]
         gt_names = data_dict['gt_names'][gt_boxes_mask]
@@ -390,7 +452,13 @@ class DataBaseSampler(object):
                 start_offset, end_offset = info['global_data_offset']
                 obj_points = copy.deepcopy(gt_database_data[start_offset:end_offset])
             else:
-                file_path = self.root_path / info['path']
+                if Target is False:
+                    file_path = self.root_path / info['path']
+                #################################################################################
+                else:
+                    # file_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/' + info['path']
+                    file_path = self.db_info_path_T + info['path']
+                #################################################################################
 
                 obj_points = np.fromfile(str(file_path), dtype=np.float32).reshape(
                     [-1, self.sampler_cfg.NUM_POINT_FEATURES])
@@ -398,6 +466,12 @@ class DataBaseSampler(object):
                     obj_points = np.fromfile(str(file_path), dtype=np.float64).reshape(-1, self.sampler_cfg.NUM_POINT_FEATURES)
 
             assert obj_points.shape[0] == info['num_points_in_gt']
+            #################################################################################
+            if Target is True:
+                msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
+                obj_points = obj_points[msk]
+                obj_points[:, 3] = ((1.0 - obj_points[:, 3]) * 0.50 + obj_points[:, 3]) * obj_points[:, 3]
+            #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 
             if self.sampler_cfg.get('USE_ROAD_PLANE', False):
@@ -442,7 +516,7 @@ class DataBaseSampler(object):
 
         return data_dict
 
-    def __call__(self, data_dict):
+    def __call__(self, data_dict, Target= False):
         """
         Args:
             data_dict:
@@ -457,13 +531,23 @@ class DataBaseSampler(object):
         total_valid_sampled_dict = []
         sampled_mv_height = []
         sampled_gt_boxes2d = []
+        ########################################################################
+        if Target is False:
+            sample_groups = self.sample_groups
+        else:
+            sample_groups = self.sample_groups_T
+        ########################################################################
 
-        for class_name, sample_group in self.sample_groups.items():
+        for class_name, sample_group in sample_groups.items():
             if self.limit_whole_scene:
                 num_gt = np.sum(class_name == gt_names)
-                sample_group['sample_num'] = str(int(self.sample_class_num[class_name]) - num_gt)
+                if Target is False:
+                    sample_group['sample_num'] = str(int(self.sample_class_num[class_name]) - num_gt)
+                else:
+                    sample_group['sample_num'] = str(int(self.sample_class_num_T[class_name]) - num_gt)
+
             if int(sample_group['sample_num']) > 0:
-                sampled_dict = self.sample_with_fixed_number(class_name, sample_group)
+                sampled_dict = self.sample_with_fixed_number(class_name, sample_group, Target=Target)
 
                 sampled_boxes = np.stack([x['box3d_lidar'] for x in sampled_dict], axis=0).astype(np.float32)
 
@@ -495,7 +579,7 @@ class DataBaseSampler(object):
             sampled_mv_height = np.concatenate(sampled_mv_height, axis=0) if len(sampled_mv_height) > 0 else None
 
             data_dict = self.add_sampled_boxes_to_scene(
-                data_dict, sampled_gt_boxes, total_valid_sampled_dict, sampled_mv_height, sampled_gt_boxes2d
+                data_dict, sampled_gt_boxes, total_valid_sampled_dict, sampled_mv_height, sampled_gt_boxes2d, Target = Target
             )
 
         data_dict.pop('gt_boxes_mask')

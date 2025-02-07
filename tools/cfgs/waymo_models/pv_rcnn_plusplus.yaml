@@ -1,7 +1,7 @@
-CLASS_NAMES: ['Vehicle', 'Pedestrian', 'Cyclist']
+CLASS_NAMES: ['Vehicle', 'Pedestrian']
 
 DATA_CONFIG:
-    _BASE_CONFIG_: cfgs/dataset_configs/waymo_dataset.yaml
+    _BASE_CONFIG_: /space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/dataset_configs/waymo_dataset.yaml
 
 
 MODEL:
@@ -31,7 +31,7 @@ MODEL:
         CLASS_AGNOSTIC: False
 
         CLASS_NAMES_EACH_HEAD: [
-            [ 'Vehicle', 'Pedestrian', 'Cyclist' ]
+            [ 'Vehicle', 'Pedestrian']
         ]
 
         SHARED_CONV_CHANNEL: 64
@@ -256,7 +256,7 @@ MODEL:
 
 
 OPTIMIZATION:
-    BATCH_SIZE_PER_GPU: 2
+    BATCH_SIZE_PER_GPU: 6
     NUM_EPOCHS: 30
 
     OPTIMIZER: adam_onecycle

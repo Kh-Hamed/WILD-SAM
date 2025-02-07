@@ -15,3 +15,7 @@ venv/
 *.bin
 output
 version.py
+*.txt
+*.log
+*.davinci
+*.json
