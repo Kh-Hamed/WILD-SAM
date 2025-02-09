@@ -44,14 +44,6 @@ class WaymoDataset(DatasetTemplate):
             )
         else:
             self.pred_boxes_dict = {}
-        ###############################################################################################
-        self.infos_T = []
-        info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
-        if Path(info_path).exists():
-            with open(info_path, 'rb') as f:
-                info_T = pickle.load(f)
-                self.infos_T.extend(info_T)
-        ###############################################################################################
 
     def set_split(self, split):
         super().__init__(
@@ -201,11 +193,8 @@ class WaymoDataset(DatasetTemplate):
         all_sequences_infos = [item for infos in sequence_infos for item in infos]
         return all_sequences_infos
 
-    def get_lidar(self, sequence_name, sample_idx, Target=False):
-        if not Target:
-            lidar_file = self.data_path / sequence_name / ('%04d.npy' % sample_idx)
-        else:
-            lidar_file = self.root_path_T / self.dataset_cfg.PROCESSED_DATA_TAG/ sequence_name / ('%04d.npy' % sample_idx)
+    def get_lidar(self, sequence_name, sample_idx):
+        lidar_file = self.data_path / sequence_name / ('%04d.npy' % sample_idx)
         point_features = np.load(lidar_file)  # (N, 7): [x, y, z, intensity, elongation, NLZ_flag]
 
         points_all, NLZ_flag = point_features[:, 0:5], point_features[:, 5]
@@ -357,31 +346,6 @@ class WaymoDataset(DatasetTemplate):
             index = index % len(self.infos)
 
         info = copy.deepcopy(self.infos[index])
-        ######################################################################
-        points_T = np.zeros((0, ))
-        gt_boxes_T= np.zeros((0, 7))
-        gt_names_T = np.zeros((0, 7)).astype(str)
-        if index < len(self.infos_T) and (self.training):
-            info_T = copy.deepcopy(self.infos_T[index])
-            points_T = self.get_lidar(info_T['frame_id'][:-4], int(info_T['frame_id'][-3:]), Target= True)
-
-            msk = info_T['score'] >= 0.10
-            gt_boxes_T = info_T['boxes_lidar'][msk]
-            gt_boxes_T_noisy = info_T['boxes_lidar'][~msk]
-            gt_names_T = info_T['name'][msk]
-            gt_boxes_T_noisy = box_utils.enlarge_box3d(
-            gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
-        )
-            points_T = box_utils.remove_points_in_boxes3d(points_T, gt_boxes_T_noisy)
-            input_dict_T = {
-            'sample_idx':int(info_T['frame_id'][-3:]),
-            'points': points_T,
-            'frame_id': info_T['frame_id'],
-            'gt_names':gt_names_T,
-            'gt_boxes':gt_boxes_T
-        }
-
-        ######################################################################
         pc_info = info['point_cloud']
         sequence_name = pc_info['lidar_sequence']
         sample_idx = pc_info['sample_idx']
@@ -441,14 +405,6 @@ class WaymoDataset(DatasetTemplate):
         data_dict = self.prepare_data(data_dict=input_dict)
         data_dict['metadata'] = info.get('metadata', info['frame_id'])
         data_dict.pop('num_points_in_gt', None)
-        ###################################################################################
-        if points_T.shape[0] != 0 and self.training:
-            data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
-            data_dict_T['metadata'] = info_T['metadata']
-            return [data_dict, data_dict_T]
-        else:
-            return [data_dict]
-        ###################################################################################
         return data_dict
 
     def evaluation(self, det_annos, class_names, **kwargs):
@@ -517,9 +473,9 @@ class WaymoDataset(DatasetTemplate):
             db_info_save_path = save_path / ('%s_waymo_dbinfos_%s_sampled_%d_multiframe_%s_to_%s.pkl' % (processed_data_tag, split, sampled_interval, st_frame, ed_frame))
             db_data_save_path = save_path / ('%s_gt_database_%s_sampled_%d_multiframe_%s_to_%s_global.npy' % (processed_data_tag, split, sampled_interval, st_frame, ed_frame))
         else:
-            database_save_path = save_path / ('%s_gt_database_%s_sampled_%d' % (processed_data_tag, split, sampled_interval))
-            db_info_save_path = save_path / ('%s_waymo_dbinfos_%s_sampled_%d.pkl' % (processed_data_tag, split, sampled_interval))
-            db_data_save_path = save_path / ('%s_gt_database_%s_sampled_%d_global.npy' % (processed_data_tag, split, sampled_interval))
+            database_save_path = save_path / ('%s_pseudo_gt_database_%s_sampled_%d' % (processed_data_tag, split, sampled_interval))
+            db_info_save_path = save_path / ('%s_pseudo_waymo_dbinfos_%s_sampled_%d.pkl' % (processed_data_tag, split, sampled_interval))
+            db_data_save_path = save_path / ('%s_pseudo_gt_database_%s_sampled_%d_global.npy' % (processed_data_tag, split, sampled_interval))
 
         database_save_path.mkdir(parents=True, exist_ok=True)
         all_db_infos = {}
@@ -532,9 +488,9 @@ class WaymoDataset(DatasetTemplate):
             # print('gt_database sample: %d/%d' % (k + 1, len(infos)))
             info = infos[k]
 
-            pc_info = info['point_cloud']
-            sequence_name = pc_info['lidar_sequence']
-            sample_idx = pc_info['sample_idx']
+            # pc_info = info['point_cloud']
+            sequence_name = info['frame_id'][:-4]
+            sample_idx = int(info['frame_id'][-3:])
             points = self.get_lidar(sequence_name, sample_idx)
 
             if use_sequence_data:
@@ -542,22 +498,24 @@ class WaymoDataset(DatasetTemplate):
                     info, points, sequence_name, sample_idx, self.dataset_cfg.SEQUENCE_CONFIG
                 )
 
-            annos = info['annos']
-            names = annos['name']
-            difficulty = annos['difficulty']
-            gt_boxes = annos['gt_boxes_lidar']
+            # annos = info['annos']
+            scores = info['score']
+            msk = scores >= 0.10
+            names = info['name'][msk]
+            # difficulty = annos['difficulty']
+            gt_boxes = info['boxes_lidar'][msk]
 
-            if k % 4 != 0 and len(names) > 0:
-                mask = (names == 'Vehicle')
-                names = names[~mask]
-                difficulty = difficulty[~mask]
-                gt_boxes = gt_boxes[~mask]
+            # if k % 4 != 0 and len(names) > 0:
+            #     mask = (names == 'Vehicle')
+            #     names = names[~mask]
+            #     difficulty = difficulty[~mask]
+            #     gt_boxes = gt_boxes[~mask]
 
-            if k % 2 != 0 and len(names) > 0:
-                mask = (names == 'Pedestrian')
-                names = names[~mask]
-                difficulty = difficulty[~mask]
-                gt_boxes = gt_boxes[~mask]
+            # if k % 2 != 0 and len(names) > 0:
+            #     mask = (names == 'Pedestrian')
+            #     names = names[~mask]
+            #     difficulty = difficulty[~mask]
+            #     gt_boxes = gt_boxes[~mask]
 
             num_obj = gt_boxes.shape[0]
             if num_obj == 0:
@@ -583,7 +541,9 @@ class WaymoDataset(DatasetTemplate):
                     db_path = str(filepath.relative_to(self.root_path))  # gt_database/xxxxx.bin
                     db_info = {'name': names[i], 'path': db_path, 'sequence_name': sequence_name,
                                'sample_idx': sample_idx, 'gt_idx': i, 'box3d_lidar': gt_boxes[i],
-                               'num_points_in_gt': gt_points.shape[0], 'difficulty': difficulty[i]}
+                               'num_points_in_gt': gt_points.shape[0], 'score' : scores[i]
+                            #    , 'difficulty': difficulty[i]
+                               }
 
                     # it will be used if you choose to use shared memory for gt sampling
                     stacked_gt_points.append(gt_points)
@@ -786,7 +746,7 @@ def create_waymo_infos(dataset_cfg, class_names, data_path, save_path,
     dataset.set_split(train_split)
     dataset.create_groundtruth_database(
         info_path=train_filename, save_path=save_path, split='train', sampled_interval=1,
-        used_classes=['Vehicle', 'Pedestrian', 'Cyclist'], processed_data_tag=processed_data_tag
+        used_classes=['Vehicle', 'Pedestrian'], processed_data_tag=processed_data_tag
     )
     print('---------------Data preparation Done---------------')
 
@@ -799,7 +759,8 @@ def create_waymo_gt_database(
         training=False, logger=common_utils.create_logger()
     )
     train_split = 'train'
-    train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
+    # train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
+    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
@@ -807,13 +768,13 @@ def create_waymo_gt_database(
     if use_parallel:
         dataset.create_groundtruth_database_parallel(
             info_path=train_filename, save_path=save_path, split='train', sampled_interval=1,
-            used_classes=['Vehicle', 'Pedestrian', 'Cyclist'], processed_data_tag=processed_data_tag,
+            used_classes=['Vehicle', 'Pedestrian'], processed_data_tag=processed_data_tag,
             num_workers=workers, crop_gt_with_tail=crop_gt_with_tail
         )
     else:
         dataset.create_groundtruth_database(
             info_path=train_filename, save_path=save_path, split='train', sampled_interval=1,
-            used_classes=['Vehicle', 'Pedestrian', 'Cyclist'], processed_data_tag=processed_data_tag
+            used_classes=['Vehicle', 'Pedestrian'], processed_data_tag=processed_data_tag
         )
     print('---------------Data preparation Done---------------')
 
@@ -825,7 +786,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='arg parser')
     parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/dataset_configs/waymo_dataset.yaml', help='specify the config of dataset')
-    parser.add_argument('--func', type=str, default='create_waymo_infos', help='')
+    parser.add_argument('--func', type=str, default='create_waymo_gt_database', help='')
     parser.add_argument('--processed_data_tag', type=str, default='waymo_processed_data_v0_5_0', help='')
     parser.add_argument('--update_info_only', action='store_true', default=False, help='')
     parser.add_argument('--use_parallel', action='store_true', default=False, help='')
@@ -845,7 +806,7 @@ if __name__ == '__main__':
         dataset_cfg.PROCESSED_DATA_TAG = args.processed_data_tag
         create_waymo_infos(
             dataset_cfg=dataset_cfg,
-            class_names=['Vehicle', 'Pedestrian', 'Cyclist'],
+            class_names=['Vehicle', 'Pedestrian'],
             data_path=ROOT_DIR,
             save_path=ROOT_DIR,
             raw_data_tag='',
@@ -861,9 +822,9 @@ if __name__ == '__main__':
         dataset_cfg.PROCESSED_DATA_TAG = args.processed_data_tag
         create_waymo_gt_database(
             dataset_cfg=dataset_cfg,
-            class_names=['Vehicle', 'Pedestrian', 'Cyclist'],
-            data_path=ROOT_DIR,
-            save_path=ROOT_DIR,
+            class_names=['Vehicle', 'Pedestrian'],
+            data_path=ROOT_DIR ,
+            save_path=ROOT_DIR ,
             processed_data_tag=args.processed_data_tag,
             use_parallel=args.use_parallel, 
             crop_gt_with_tail=not args.wo_crop_gt_with_tail

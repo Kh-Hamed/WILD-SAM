@@ -61,39 +61,39 @@ class DataBaseSampler(object):
                 'indices': np.arange(len(self.db_infos[class_name]))
             }
         ##############################################################################################
-        # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
-        self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo/'
+        self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
+        # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo/'
         self.db_infos_T = {}
         for class_name in class_names:
             self.db_infos_T[class_name] = []
-        # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
-        db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
+        db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
         with open(str(db_info_T), 'rb') as f:
             infos_T = pickle.load(f)
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]
 
         self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
-        weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
-        for cur_class in class_names:
-            info_T_cls = self.db_infos_T[cur_class]
-            summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
-            sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
-            mn = np.mean(sorted_summer_points)
-            std = np.std(sorted_summer_points)
-            high_th = np.floor(mn  +  3 * std)
-            sorted_summer_points_thre = sorted_summer_points[(sorted_summer_points>=5) & (sorted_summer_points<=high_th)]
-            unique_sorted_summer_points= np.unique(sorted_summer_points_thre)
-            summer_weights = np.linspace(weight[cur_class], 1.0, len(unique_sorted_summer_points))
-            summer_weights = {element: summer_weights[idx] for idx, element in enumerate(unique_sorted_summer_points)}
-            weights = []
-            for i, element in enumerate(sorted_summer_points):
-                if element > high_th:
-                    weights.append(1)
-                else:
-                    weights.append(summer_weights[element])
-            num_points_in_gt_T = np.floor(np.maximum(sorted_summer_points * weights, 5)).astype(int)
-            for i, ind in enumerate(sorted_indices):
-                info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
+        # weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
+        # for cur_class in class_names:
+        #     info_T_cls = self.db_infos_T[cur_class]
+        #     summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
+        #     sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
+        #     mn = np.mean(sorted_summer_points)
+        #     std = np.std(sorted_summer_points)
+        #     high_th = np.floor(mn  +  3 * std)
+        #     sorted_summer_points_thre = sorted_summer_points[(sorted_summer_points>=5) & (sorted_summer_points<=high_th)]
+        #     unique_sorted_summer_points= np.unique(sorted_summer_points_thre)
+        #     summer_weights = np.linspace(weight[cur_class], 1.0, len(unique_sorted_summer_points))
+        #     summer_weights = {element: summer_weights[idx] for idx, element in enumerate(unique_sorted_summer_points)}
+        #     weights = []
+        #     for i, element in enumerate(sorted_summer_points):
+        #         if element > high_th:
+        #             weights.append(1)
+        #         else:
+        #             weights.append(summer_weights[element])
+        #     num_points_in_gt_T = np.floor(np.maximum(sorted_summer_points * weights, 5)).astype(int)
+        #     for i, ind in enumerate(sorted_indices):
+        #         info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
 
         self.sample_groups_T = {}
         self.sample_class_num_T = {}
@@ -467,10 +467,10 @@ class DataBaseSampler(object):
 
             assert obj_points.shape[0] == info['num_points_in_gt']
             #################################################################################
-            if Target is True:
-                msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
-                obj_points = obj_points[msk]
-                obj_points[:, 3] = ((1.0 - obj_points[:, 3]) * 0.50 + obj_points[:, 3]) * obj_points[:, 3]
+            # if Target is True:
+            #     msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
+            #     obj_points = obj_points[msk]
+            #     obj_points[:, 3] = ((1.0 - obj_points[:, 3]) * 0.50 + obj_points[:, 3]) * obj_points[:, 3]
             #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 

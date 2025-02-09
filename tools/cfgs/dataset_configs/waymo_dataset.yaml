@@ -1,7 +1,7 @@
 DATASET: 'WaymoDataset'
 DATA_PATH_T: /egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data
-#DATA_PATH: /egr/research-canvas/detection3d_datasets/waymo
-DATA_PATH: /egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data
+DATA_PATH: /egr/research-canvas/detection3d_datasets/waymo
+# DATA_PATH: /egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data
 PROCESSED_DATA_TAG: 'waymo_processed_data_v0_5_0'
 
 POINT_CLOUD_RANGE: [-75.2, -75.2, -2, 75.2, 75.2, 4]
