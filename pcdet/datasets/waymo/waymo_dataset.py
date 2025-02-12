@@ -366,6 +366,9 @@ class WaymoDataset(DatasetTemplate):
             points_T = self.get_lidar(info_T['frame_id'][:-4], int(info_T['frame_id'][-3:]), Target= True)
 
             msk = info_T['score'] >= 0.60
+            max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
+            msk_lwh = info_T['boxes_lidar'][:, 3:6] <= max_lwh
+            msk = msk & (msk_lwh[:, 0].reshape(-1, )  & msk_lwh[:, 1].reshape(-1, ) & msk_lwh[:, 2].reshape(-1, )) 
             gt_boxes_T = info_T['boxes_lidar'][msk]
             gt_boxes_T_noisy = info_T['boxes_lidar'][~msk]
             gt_names_T = info_T['name'][msk]
