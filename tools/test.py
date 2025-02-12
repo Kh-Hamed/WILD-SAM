@@ -47,6 +47,7 @@ def parse_config():
     cfg.TAG = Path(args.cfg_file).stem
     # cfg.EXP_GROUP_PATH = '/'.join(args.cfg_file.split('/')[1:-1])  # remove 'cfgs' and 'xxxx.yaml'
     cfg.EXP_GROUP_PATH = ''
+    args.batch_size = 1
 
     np.random.seed(1024)
 

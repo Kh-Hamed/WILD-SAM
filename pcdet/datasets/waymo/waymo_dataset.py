@@ -365,7 +365,7 @@ class WaymoDataset(DatasetTemplate):
             info_T = copy.deepcopy(self.infos_T[index])
             points_T = self.get_lidar(info_T['frame_id'][:-4], int(info_T['frame_id'][-3:]), Target= True)
 
-            msk = info_T['score'] >= 0.10
+            msk = info_T['score'] >= 0.60
             gt_boxes_T = info_T['boxes_lidar'][msk]
             gt_boxes_T_noisy = info_T['boxes_lidar'][~msk]
             gt_names_T = info_T['name'][msk]

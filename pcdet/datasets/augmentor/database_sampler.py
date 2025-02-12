@@ -73,6 +73,7 @@ class DataBaseSampler(object):
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]
 
         self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
+        self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
         # weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
         # for cur_class in class_names:
         #     info_T_cls = self.db_infos_T[cur_class]
@@ -177,6 +178,21 @@ class DataBaseSampler(object):
 
         return db_infos
 
+    ########################################################################################
+    def filter_by_min_score(self, db_infos, min_score):
+        for name in self.class_names:
+            filtered_infos = []
+            for info in db_infos[name]:
+                if info['score'] >= min_score:
+                    filtered_infos.append(info)
+
+            if self.logger is not None:
+                self.logger.info('Database filter by min score %s: %d => %d' %
+                                    (name, len(db_infos[name]), len(filtered_infos)))
+            db_infos[name] = filtered_infos
+
+        return db_infos
+    #######################################################################################
     def sample_with_fixed_number(self, class_name, sample_group, Target = False):
         """
         Args:
