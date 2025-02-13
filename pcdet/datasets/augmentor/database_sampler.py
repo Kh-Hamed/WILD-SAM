@@ -73,19 +73,42 @@ class DataBaseSampler(object):
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]
 
         self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
+        ##################################################################################################################
+        root_path_src = '/egr/research-canvas/detection3d_datasets/waymo'
+        root_path_trgt = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data'
+        path_src = root_path_src + '/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
+        path_pseudo_trgt = root_path_trgt + '/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+
+        # Load the data
+        data_src = self.load_pickle_file(path_src)
+        data_pseudo_trgt = self.load_pickle_file(path_pseudo_trgt)
+        from concurrent.futures import ThreadPoolExecutor
+        self.intensity_classes_src = {}
+        self.intensity_classes_trgt = {}
+        for cls in class_names:
+            src_point_paths = [info['path'] for info in data_src.get(cls, [])][::10]
+            pseudo_trgt_point_paths = [info['path'] for info in data_pseudo_trgt.get(cls, [])][::10]
+            with ThreadPoolExecutor() as executor:
+                results_src = list(executor.map(self.process_file, src_point_paths, [root_path_src] * len(src_point_paths)))
+                results_pseudo_trgt = list(executor.map(self.process_file, pseudo_trgt_point_paths, [root_path_trgt] * len(pseudo_trgt_point_paths)))
+        
+            self.intensity_classes_src[cls] = np.sort(np.concatenate(results_src))
+            self.intensity_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt))
+
         # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
-        weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
-        for cur_class in class_names:
-            info_T_cls = self.db_infos_T[cur_class]
-            summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
-            sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
-            mn = np.mean(sorted_summer_points)
-            std = np.std(sorted_summer_points)
-            high_th = np.floor(mn  +  3 * std)
-            summer_weights = np.interp(sorted_summer_points, [5, high_th], [weight[cur_class], 1.0])
-            num_points_in_gt_T = np.maximum(np.floor(sorted_summer_points * summer_weights), 5).astype(int)
-            for i, ind in enumerate(sorted_indices):
-                info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
+        # weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
+        # for cur_class in class_names:
+        #     info_T_cls = self.db_infos_T[cur_class]
+        #     summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
+        #     sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
+        #     mn = np.mean(sorted_summer_points)
+        #     std = np.std(sorted_summer_points)
+        #     high_th = np.floor(mn  +  3 * std)
+        #     summer_weights = np.interp(sorted_summer_points, [5, high_th], [weight[cur_class], 1.0])
+        #     num_points_in_gt_T = np.maximum(np.floor(sorted_summer_points * summer_weights), 5).astype(int)
+        #     for i, ind in enumerate(sorted_indices):
+        #         info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
+
 
         self.sample_groups_T = {}
         self.sample_class_num_T = {}
@@ -123,6 +146,30 @@ class DataBaseSampler(object):
                 dist.barrier()
             self.logger.info('GT database has been removed from shared memory')
 
+    ################################################################################################
+    def cdf_match_batch(self, source_samples, source_data, target_data):
+
+        # Compute empirical CDF for source samples
+        source_cdf_values = np.interp(source_samples, source_data, np.linspace(0, 1, len(source_data)))
+        
+        # Map source CDF values to target samples using the target's inverse CDF
+        target_samples = np.interp(source_cdf_values, np.linspace(0, 1, len(target_data)), target_data)
+        
+        return target_samples.astype(np.float32).reshape(-1, )
+    
+
+    def process_file(self, lidar_file, root_path):
+        file_path = root_path + '/' + lidar_file
+        points_all = np.fromfile(str(file_path), dtype=np.float32).reshape(
+            [-1, 5])  # (N, 7): [x, y, z, intensity, elongation, NLZ_flag]   
+        return points_all[:, 3]  # Return processed intensity column
+
+    def load_pickle_file(self, path):
+        with open(path, 'rb') as file:
+            data = pickle.load(file)
+        return data
+
+    ################################################################################################
     def load_db_to_shared_memory(self):
         self.logger.info('Loading GT database to shared memory')
         cur_rank, world_size, num_gpus = common_utils.get_dist_info(return_gpu_per_machine=True)
@@ -475,9 +522,9 @@ class DataBaseSampler(object):
             assert obj_points.shape[0] == info['num_points_in_gt']
             #################################################################################
             if Target is True:
-                msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
-                obj_points = obj_points[msk]
-                # obj_points[:, 3] = ((1.0 - obj_points[:, 3]) * 0.50 + obj_points[:, 3]) * obj_points[:, 3]
+                # msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
+                # obj_points = obj_points[msk]
+                obj_points[:, 3] = self.cdf_match_batch(obj_points[:, 3].reshape(-1, ), self.intensity_classes_src[info['name']], self.intensity_classes_trgt[info['name']])
             #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 
