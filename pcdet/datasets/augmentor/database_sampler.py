@@ -96,18 +96,18 @@ class DataBaseSampler(object):
             self.intensity_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt))
 
         # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
-        # weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
-        # for cur_class in class_names:
-        #     info_T_cls = self.db_infos_T[cur_class]
-        #     summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
-        #     sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
-        #     mn = np.mean(sorted_summer_points)
-        #     std = np.std(sorted_summer_points)
-        #     high_th = np.floor(mn  +  3 * std)
-        #     summer_weights = np.interp(sorted_summer_points, [5, high_th], [weight[cur_class], 1.0])
-        #     num_points_in_gt_T = np.maximum(np.floor(sorted_summer_points * summer_weights), 5).astype(int)
-        #     for i, ind in enumerate(sorted_indices):
-        #         info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
+        weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
+        for cur_class in class_names:
+            info_T_cls = self.db_infos_T[cur_class]
+            summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
+            sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
+            mn = np.mean(sorted_summer_points)
+            std = np.std(sorted_summer_points)
+            high_th = np.floor(mn  +  3 * std)
+            summer_weights = np.interp(sorted_summer_points, [5, high_th], [weight[cur_class], 1.0])
+            num_points_in_gt_T = np.maximum(np.floor(sorted_summer_points * summer_weights), 5).astype(int)
+            for i, ind in enumerate(sorted_indices):
+                info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
 
 
         self.sample_groups_T = {}
@@ -522,8 +522,8 @@ class DataBaseSampler(object):
             assert obj_points.shape[0] == info['num_points_in_gt']
             #################################################################################
             if Target is True:
-                # msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
-                # obj_points = obj_points[msk]
+                msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
+                obj_points = obj_points[msk]
                 obj_points[:, 3] = self.cdf_match_batch(obj_points[:, 3].reshape(-1, ), self.intensity_classes_src[info['name']], self.intensity_classes_trgt[info['name']])
             #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
