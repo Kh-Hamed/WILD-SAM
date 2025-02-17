@@ -522,9 +522,17 @@ class DataBaseSampler(object):
             assert obj_points.shape[0] == info['num_points_in_gt']
             #################################################################################
             if Target is True:
-                msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
-                obj_points = obj_points[msk]
-                obj_points[:, 3] = self.cdf_match_batch(obj_points[:, 3].reshape(-1, ), self.intensity_classes_src[info['name']], self.intensity_classes_trgt[info['name']])
+                option = np.random.choice(["intensity", "sparsity"], p=[0.5, 0.5])
+                if option in ["sparsity"]:
+                    msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
+                    obj_points = obj_points[msk]
+
+                if option in ["intensity"]:
+                    obj_points[:, 3] = self.cdf_match_batch(
+                        obj_points[:, 3].reshape(-1,),
+                        self.intensity_classes_src[info['name']],
+                        self.intensity_classes_trgt[info['name']]
+                    )
             #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 
