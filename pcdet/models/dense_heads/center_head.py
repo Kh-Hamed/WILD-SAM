@@ -290,7 +290,17 @@ class CenterHead(nn.Module):
                         tb_dict['iou_reg_loss_head_%d' % idx] = (batch_box_preds_for_iou * 0.).sum()
 
 
-
+        ###################################################################################################
+        import torch.nn.functional as F
+        bc_pred = self.forward_ret_dict['bc_pred']
+        bc_label = self.forward_ret_dict['bc_label']
+        # bc_mask = self.forward_ret_dict['bc_mask']
+        if bc_pred.shape[0] != 0:
+            bce_loss = 0.20 * F.binary_cross_entropy(bc_pred, bc_label, reduction='mean')
+            # bce_loss = 0.20 * ((bce_loss * bc_mask).sum() / torch.clamp(bc_mask.sum(), min=1.0))
+            loss += bce_loss
+            tb_dict['bce_loss_dense'] = bce_loss.item()
+        ##################################################################################################
         tb_dict['rpn_loss'] = loss.item()
         return loss, tb_dict
 
@@ -389,7 +399,12 @@ class CenterHead(nn.Module):
         pred_dicts = []
         for head in self.heads_list:
             pred_dicts.append(head(x))
-
+        ##############################################################
+        if self.training:
+            self.forward_ret_dict['bc_pred'] = data_dict['bc_pred']
+            self.forward_ret_dict['bc_label'] = data_dict['bc_label']
+            self.forward_ret_dict['bc_mask'] = data_dict['bc_mask']
+        #############################################################
         if self.training:
             target_dict = self.assign_targets(
                 data_dict['gt_boxes'], feature_map_size=spatial_features_2d.size()[2:],
