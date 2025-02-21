@@ -294,10 +294,10 @@ class CenterHead(nn.Module):
         import torch.nn.functional as F
         bc_pred = self.forward_ret_dict['bc_pred']
         bc_label = self.forward_ret_dict['bc_label']
-        # bc_mask = self.forward_ret_dict['bc_mask']
+        bc_mask = self.forward_ret_dict['bc_mask']
         if bc_pred.shape[0] != 0:
-            bce_loss = 0.20 * F.binary_cross_entropy(bc_pred, bc_label, reduction='mean')
-            # bce_loss = 0.20 * ((bce_loss * bc_mask).sum() / torch.clamp(bc_mask.sum(), min=1.0))
+            dc_loss = F.binary_cross_entropy(bc_pred, bc_label, reduction='none')
+            bce_loss = 0.20 * ((dc_loss * bc_mask).sum() / torch.clamp(bc_mask.sum(), min=1.0))
             loss += bce_loss
             tb_dict['bce_loss_dense'] = bce_loss.item()
         ##################################################################################################

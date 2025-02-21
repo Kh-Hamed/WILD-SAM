@@ -35,9 +35,9 @@ class HeightCompression(nn.Module):
         output_channels_list = [16, 8, 4, 1]
 
         for output_channels in output_channels_list:
-            layers.append(nn.Conv2d(input_channels, output_channels, kernel_size=3, padding=1, bias=False))
-            layers.append(nn.BatchNorm2d(output_channels, eps=1e-3, momentum=0.01))
+            layers.append(nn.Conv2d(input_channels, output_channels, kernel_size=3, padding=1, bias=True))
             if output_channels != 1:  # No activation on the final layer
+                layers.append(nn.BatchNorm2d(output_channels, eps=1e-3, momentum=0.01))
                 layers.append(nn.ReLU())
             input_channels = output_channels
 
@@ -99,8 +99,15 @@ class HeightCompression(nn.Module):
                             (neighbor_indices[:, 1] >= 0) & (neighbor_indices[:, 1] < feature_map_size[1])
             neighbor_indices_valid = neighbor_indices[valid_indices].long().clone()
             inds[bs_idx, 0, neighbor_indices_valid[:, 0], neighbor_indices_valid[:, 1]] = True
+        size = feature_map_size[0]
+        center = size // 2
+        sigma = size // 6
+        x = torch.linspace(0, size - 1, size)
+        y = torch.linspace(0, size - 1, size)
+        x, y = torch.meshgrid(x, y)
+        gaussian_weight = (1.0 - torch.exp(-((x - center)**2 + (y - center)**2) / (2 * sigma**2))).to(inds.device).unsqueeze(0).unsqueeze(0)
         
-        batch_dict['bc_mask_unbalanced'] = 1.0 * inds
+        batch_dict['bc_mask_unbalanced'] = (1.0 * inds) * gaussian_weight
         
         return batch_dict
 
