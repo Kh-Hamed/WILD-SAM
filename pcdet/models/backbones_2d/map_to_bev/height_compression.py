@@ -98,7 +98,7 @@ class HeightCompression(nn.Module):
             valid_indices = (neighbor_indices[:, 0] >= 0) & (neighbor_indices[:, 0] < feature_map_size[0]) & \
                             (neighbor_indices[:, 1] >= 0) & (neighbor_indices[:, 1] < feature_map_size[1])
             neighbor_indices_valid = neighbor_indices[valid_indices].long().clone()
-            inds[bs_idx, 0, neighbor_indices_valid[:, 0], neighbor_indices_valid[:, 1]] = True
+            inds[bs_idx, 0, neighbor_indices_valid[:, 1], neighbor_indices_valid[:, 0]] = True
         size = feature_map_size[0]
         center = size // 2
         sigma = size // 6

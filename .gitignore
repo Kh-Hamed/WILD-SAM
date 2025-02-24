@@ -19,3 +19,4 @@ version.py
 *.log
 *.davinci
 *.json
+*.png

@@ -62,7 +62,9 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
         scaler.update()
 
         accumulated_iter += 1
- 
+        #######################################################################################################################
+        loss_base = loss.item() - tb_dict.get('dc_loss_dense', 0)
+        ########################################################################################################################
         cur_forward_time = time.time() - data_timer
         cur_batch_time = time.time() - end
         end = time.time()
@@ -79,10 +81,10 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
             data_time.update(avg_data_time)
             forward_time.update(avg_forward_time)
             batch_time.update(avg_batch_time)
-            losses_m.update(loss.item() , batch_size)
+            losses_m.update(loss_base , batch_size)
             
             disp_dict.update({
-                'loss': loss.item(), 'lr': cur_lr, 'd_time': f'{data_time.val:.2f}({data_time.avg:.2f})',
+                'loss': loss_base, 'lr': cur_lr, 'd_time': f'{data_time.val:.2f}({data_time.avg:.2f})',
                 'f_time': f'{forward_time.val:.2f}({forward_time.avg:.2f})', 'b_time': f'{batch_time.val:.2f}({batch_time.avg:.2f})'
             })
             

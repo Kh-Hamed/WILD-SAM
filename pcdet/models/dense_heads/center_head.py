@@ -299,7 +299,7 @@ class CenterHead(nn.Module):
             dc_loss = F.binary_cross_entropy(bc_pred, bc_label, reduction='none')
             bce_loss = 0.20 * ((dc_loss * bc_mask).sum() / torch.clamp(bc_mask.sum(), min=1.0))
             loss += bce_loss
-            tb_dict['bce_loss_dense'] = bce_loss.item()
+            tb_dict['dc_loss_dense'] = bce_loss.item()
         ##################################################################################################
         tb_dict['rpn_loss'] = loss.item()
         return loss, tb_dict
