@@ -85,15 +85,21 @@ class DataBaseSampler(object):
         from concurrent.futures import ThreadPoolExecutor
         self.intensity_classes_src = {}
         self.intensity_classes_trgt = {}
+        self.elongation_classes_src = {}
+        self.elongation_classes_trgt = {}
         for cls in class_names:
             src_point_paths = [info['path'] for info in data_src.get(cls, [])][::10]
             pseudo_trgt_point_paths = [info['path'] for info in data_pseudo_trgt.get(cls, [])][::10]
             with ThreadPoolExecutor() as executor:
-                results_src = list(executor.map(self.process_file, src_point_paths, [root_path_src] * len(src_point_paths)))
-                results_pseudo_trgt = list(executor.map(self.process_file, pseudo_trgt_point_paths, [root_path_trgt] * len(pseudo_trgt_point_paths)))
+                results_src_intensity = list(executor.map(self.process_file, src_point_paths, [root_path_src] * len(src_point_paths), [3] * len(src_point_paths)))
+                results_pseudo_trgt_intensity = list(executor.map(self.process_file, pseudo_trgt_point_paths, [root_path_trgt] * len(pseudo_trgt_point_paths), [3] * len(pseudo_trgt_point_paths)))
+                results_src_elongation = list(executor.map(self.process_file, src_point_paths, [root_path_src] * len(src_point_paths), [4] * len(src_point_paths)))
+                results_pseudo_trgt_elongation = list(executor.map(self.process_file, pseudo_trgt_point_paths, [root_path_trgt] * len(pseudo_trgt_point_paths), [4] * len(pseudo_trgt_point_paths)))
         
-            self.intensity_classes_src[cls] = np.sort(np.concatenate(results_src))
-            self.intensity_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt))
+            self.intensity_classes_src[cls] = np.sort(np.concatenate(results_src_intensity))
+            self.intensity_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt_intensity))
+            self.elongation_classes_src[cls] = np.sort(np.concatenate(results_src_elongation))
+            self.elongation_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt_elongation))
 
         # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
         weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
@@ -158,11 +164,11 @@ class DataBaseSampler(object):
         return target_samples.astype(np.float32).reshape(-1, )
     
 
-    def process_file(self, lidar_file, root_path):
+    def process_file(self, lidar_file, root_path, index):
         file_path = root_path + '/' + lidar_file
         points_all = np.fromfile(str(file_path), dtype=np.float32).reshape(
             [-1, 5])  # (N, 7): [x, y, z, intensity, elongation, NLZ_flag]   
-        return points_all[:, 3]  # Return processed intensity column
+        return points_all[:, index]  # Return processed intensity column
 
     def load_pickle_file(self, path):
         with open(path, 'rb') as file:
@@ -522,17 +528,17 @@ class DataBaseSampler(object):
             assert obj_points.shape[0] == info['num_points_in_gt']
             #################################################################################
             if Target is True:
-                option = np.random.choice(["intensity", "sparsity"], p=[0.5, 0.5])
-                if option in ["sparsity"]:
-                    msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
-                    obj_points = obj_points[msk]
+                # option = np.random.choice(["intensity", "sparsity"], p=[0.5, 0.5])
+                # if option in ["sparsity"]:
+                #     msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
+                #     obj_points = obj_points[msk]
 
-                if option in ["intensity"]:
-                    obj_points[:, 3] = self.cdf_match_batch(
-                        obj_points[:, 3].reshape(-1,),
-                        self.intensity_classes_src[info['name']],
-                        self.intensity_classes_trgt[info['name']]
-                    )
+                # if option in ["intensity"]:
+                obj_points[:, 4] = self.cdf_match_batch(
+                    obj_points[:, 4].reshape(-1,),
+                    self.elongation_classes_src[info['name']],
+                    self.elongation_classes_trgt[info['name']]
+                )
             #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 
