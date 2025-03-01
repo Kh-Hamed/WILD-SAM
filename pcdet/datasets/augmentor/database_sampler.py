@@ -87,6 +87,11 @@ class DataBaseSampler(object):
         self.intensity_classes_trgt = {}
         self.elongation_classes_src = {}
         self.elongation_classes_trgt = {}
+        self.counts_target = {}
+        self.counts_source = {}
+        self.unique_vals_target = {}
+        self.unique_vals_source = {}
+
         for cls in class_names:
             src_point_paths = [info['path'] for info in data_src.get(cls, [])][::10]
             pseudo_trgt_point_paths = [info['path'] for info in data_pseudo_trgt.get(cls, [])][::10]
@@ -100,6 +105,8 @@ class DataBaseSampler(object):
             self.intensity_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt_intensity))
             self.elongation_classes_src[cls] = np.sort(np.concatenate(results_src_elongation))
             self.elongation_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt_elongation))
+            self.unique_vals_target[cls], self.counts_target[cls] = np.unique(self.elongation_classes_trgt[cls], return_counts=True)
+            self.unique_vals_source[cls], self.counts_source[cls] = np.unique(self.elongation_classes_src[cls], return_counts=True)
 
         # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
         weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
@@ -153,13 +160,13 @@ class DataBaseSampler(object):
             self.logger.info('GT database has been removed from shared memory')
 
     ################################################################################################
-    def cdf_match_batch(self, source_samples, source_data, target_data):
+    def cdf_match_batch(self, source_samples, counts_source, unique_vals_source,  counts_target, unique_vals_target):
 
-        # Compute empirical CDF for source samples
-        source_cdf_values = np.interp(source_samples, source_data, np.linspace(0, 1, len(source_data)))
-        
-        # Map source CDF values to target samples using the target's inverse CDF
-        target_samples = np.interp(source_cdf_values, np.linspace(0, 1, len(target_data)), target_data)
+        cdf_vals_source = np.cumsum(counts_source) / counts_source.sum()
+        source_cdf_values = np.interp(source_samples, unique_vals_source, cdf_vals_source)
+
+        cdf_vals_target = np.cumsum(counts_target) / counts_target.sum()
+        target_samples = np.interp(source_cdf_values, cdf_vals_target, unique_vals_target)    
         
         return target_samples.astype(np.float32).reshape(-1, )
     
@@ -536,8 +543,10 @@ class DataBaseSampler(object):
                 # if option in ["intensity"]:
                 obj_points[:, 4] = self.cdf_match_batch(
                     obj_points[:, 4].reshape(-1,),
-                    self.elongation_classes_src[info['name']],
-                    self.elongation_classes_trgt[info['name']]
+                    self.counts_source[info['name']],
+                    self.unique_vals_source[info['name']],
+                    self.counts_target[info['name']],
+                    self.unique_vals_target[info['name']] 
                 )
             #################################################################################
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
