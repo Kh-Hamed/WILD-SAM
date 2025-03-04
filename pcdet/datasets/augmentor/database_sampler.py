@@ -657,4 +657,29 @@ class DataBaseSampler(object):
             )
 
         data_dict.pop('gt_boxes_mask')
+        ########################################################################
+        if data_dict.get('src_modulated', False) is not False:
+            
+            from pcdet.ops.roiaware_pool3d.roiaware_pool3d_utils import points_in_boxes_cpu
+            points_bg = box_utils.remove_points_in_boxes3d(data_dict['points'], data_dict['gt_boxes'])
+            points_fg_modulated = []
+            points = np.copy(data_dict['points'])
+            
+            for index, name in enumerate(data_dict['gt_names']):
+                point_masks = points_in_boxes_cpu(points[:, 0:3], data_dict['gt_boxes'][index,:].reshape(1, -1))
+                inside_box_mask = point_masks.sum(axis=0) > 0
+                point_fg = points[inside_box_mask]
+                if name in self.class_names:
+                    point_fg[:, 3] = self.cdf_match_batch(
+                        point_fg[:, 3].reshape(-1,),
+                        self.intensity_counts_source[name],
+                        self.intensity_unique_vals_source[name],
+                        self.intensity_counts_target[name],
+                        self.intensity_unique_vals_target[name] 
+                    )  
+                points_fg_modulated.append(point_fg)
+
+            points_fg = np.concatenate(points_fg_modulated, axis=0)         
+            data_dict['points'] = np.concatenate([points_fg, points_bg], axis=0)
+        ########################################################################
         return data_dict
