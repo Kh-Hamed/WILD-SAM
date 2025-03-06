@@ -452,11 +452,14 @@ class WaymoDataset(DatasetTemplate):
             data_dict_src_m['metadata'] = info.get('metadata', info['frame_id'])
             data_dict_src_m.pop('num_points_in_gt', None)
             data_dict_src_m.pop('src_modulated', None)
-            return [data_dict, data_dict_src_m]
-        # if points_T.shape[0] != 0 and self.training:
-        #     data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
-        #     data_dict_T['metadata'] = info_T['metadata']
-        #     return [data_dict, data_dict_T]
+            # return [data_dict, data_dict_src_m]
+            if points_T.shape[0] != 0:
+                data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
+                data_dict_T['metadata'] = info_T['metadata']
+                return [data_dict, data_dict_src_m , data_dict_T]
+            else:
+                return [data_dict, data_dict_src_m]
+
         else:
             return [data_dict]
         ###################################################################################
