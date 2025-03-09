@@ -291,15 +291,21 @@ class CenterHead(nn.Module):
 
 
         ###################################################################################################
-        # import torch.nn.functional as F
-        # bc_pred = self.forward_ret_dict['bc_pred']
-        # bc_label = self.forward_ret_dict['bc_label']
-        # bc_mask = self.forward_ret_dict['bc_mask']
-        # if bc_pred.shape[0] != 0:
-        #     dc_loss = F.binary_cross_entropy(bc_pred, bc_label, reduction='none')
-        #     bce_loss = 0.20 * ((dc_loss * bc_mask).sum() / torch.clamp(bc_mask.sum(), min=1.0))
-        #     loss += bce_loss
-        #     tb_dict['dc_loss_dense'] = bce_loss.item()
+        import torch.nn.functional as F
+        bc_pred = self.forward_ret_dict['dc_pred']
+        bc_label = self.forward_ret_dict['dc_label']
+        bc_mask = self.forward_ret_dict['dc_mask']
+        task_pred = self.forward_ret_dict['task_pred']
+        task_label, _ = torch.max(target_dicts['heatmaps'][0], dim=1, keepdim=True)
+        task_loss = self.hm_loss_func(task_pred, task_label)
+        loss += task_loss
+        tb_dict['task_loss'] = task_loss.item()
+        
+        if bc_pred.shape[0] != 0:
+            dc_loss = F.binary_cross_entropy(bc_pred, bc_label, reduction='none')
+            bce_loss = 0.20 * ((dc_loss * bc_mask).sum() / torch.clamp(bc_mask.sum(), min=1.0))
+            loss += bce_loss
+            tb_dict['dc_loss_dense'] = bce_loss.item()
         ##################################################################################################
         tb_dict['rpn_loss'] = loss.item()
         return loss, tb_dict
@@ -400,10 +406,11 @@ class CenterHead(nn.Module):
         for head in self.heads_list:
             pred_dicts.append(head(x))
         ##############################################################
-        # if self.training:
-        #     self.forward_ret_dict['bc_pred'] = data_dict['bc_pred']
-        #     self.forward_ret_dict['bc_label'] = data_dict['bc_label']
-        #     self.forward_ret_dict['bc_mask'] = data_dict['bc_mask']
+        if self.training:
+            self.forward_ret_dict['task_pred'] = data_dict['task_pred']
+            self.forward_ret_dict['dc_pred'] = data_dict['dc_pred']
+            self.forward_ret_dict['dc_label'] = data_dict['dc_label']
+            self.forward_ret_dict['dc_mask'] = data_dict['dc_mask_fg']
         #############################################################
         if self.training:
             target_dict = self.assign_targets(

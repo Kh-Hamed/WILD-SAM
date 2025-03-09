@@ -63,7 +63,7 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
 
         accumulated_iter += 1
         #######################################################################################################################
-        loss_base = loss.item() - tb_dict.get('dc_loss_dense', 0)
+        loss_base = loss.item() - tb_dict.get('dc_loss_dense', 0) - tb_dict.get('task_loss', 0)
         ########################################################################################################################
         cur_forward_time = time.time() - data_timer
         cur_batch_time = time.time() - end
