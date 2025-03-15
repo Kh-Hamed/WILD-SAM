@@ -190,17 +190,36 @@ class DataBaseSampler(object):
     def cdf_match_batch(self, source_samples, cls, box):
         box = box.reshape(1, -1)
         box_distance = np.sqrt(box[0, 0] ** 2  + box[0, 1] ** 2 + box[0, 2] ** 2)
-        dist = 'close' if box_distance < self.range else 'far'
-        counts_source = self.intensity_counts_source[cls + '_' + dist]
-        unique_vals_source = self.intensity_unique_vals_source[cls + '_' + dist]
-        counts_target = self.intensity_counts_target[cls + '_' + dist]
-        unique_vals_target = self.intensity_unique_vals_target[cls + '_' + dist]   
+        alpha = box_distance / ( 2 * self.range)
+        beta = np.clip((alpha - 0.4) / 0.2, 0, 1)
+        # dist = 'close' if box_distance < self.range else 'far'
+        dist = 'close'
+        counts_source_close = self.intensity_counts_source[cls + '_' + dist]
+        unique_vals_source_close = self.intensity_unique_vals_source[cls + '_' + dist]
+        counts_target_close = self.intensity_counts_target[cls + '_' + dist]
+        unique_vals_target_close = self.intensity_unique_vals_target[cls + '_' + dist]   
 
-        cdf_vals_source = np.cumsum(counts_source) / counts_source.sum()
-        source_cdf_values = np.interp(source_samples, unique_vals_source, cdf_vals_source)
+        cdf_vals_source_close = np.cumsum(counts_source_close) / counts_source_close.sum()
+        source_cdf_values_close = np.interp(source_samples, unique_vals_source_close, cdf_vals_source_close)
 
-        cdf_vals_target = np.cumsum(counts_target) / counts_target.sum()
-        target_samples = np.interp(source_cdf_values, cdf_vals_target, unique_vals_target)    
+        cdf_vals_target_close = np.cumsum(counts_target_close) / counts_target_close.sum()
+        target_samples_close = np.interp(source_cdf_values_close, cdf_vals_target_close, unique_vals_target_close)
+
+
+        dist = 'far'
+        counts_source_far = self.intensity_counts_source[cls + '_' + dist]
+        unique_vals_source_far = self.intensity_unique_vals_source[cls + '_' + dist]
+        counts_target_far = self.intensity_counts_target[cls + '_' + dist]
+        unique_vals_target_far = self.intensity_unique_vals_target[cls + '_' + dist]   
+
+        cdf_vals_source_far = np.cumsum(counts_source_far) / counts_source_far.sum()
+        source_cdf_values_far = np.interp(source_samples, unique_vals_source_far, cdf_vals_source_far)
+
+        cdf_vals_target_far = np.cumsum(counts_target_far) / counts_target_far.sum()
+        target_samples_far = np.interp(source_cdf_values_far, cdf_vals_target_far, unique_vals_target_far)
+
+        target_samples = (1.0 - beta) * target_samples_close + beta * target_samples_far
+    
         
         return target_samples.astype(np.float32).reshape(-1, )
     
