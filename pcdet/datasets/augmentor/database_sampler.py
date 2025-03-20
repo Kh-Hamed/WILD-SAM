@@ -86,8 +86,8 @@ class DataBaseSampler(object):
         self.intensity_classes_src = {}; self.intensity_classes_trgt = {}; self.elongation_classes_src = {}; self.elongation_classes_trgt = {}
         self.elongation_counts_target = {}; self.elongation_counts_source = {}; self.elongation_unique_vals_target = {}; self.elongation_unique_vals_source = {}
         self.intensity_counts_target = {}; self.intensity_counts_source = {}; self.intensity_unique_vals_target = {}; self.intensity_unique_vals_source = {}
-        self.range = 37.6
-        skip = 10
+        self.range = 37.5
+        skip = 5
         for cls in class_names:
             src_point_paths = [info['path'] for info in data_src.get(cls, [])][::skip]
             pseudo_trgt_point_paths = [info['path'] for info in data_pseudo_trgt.get(cls, [])][::skip]
