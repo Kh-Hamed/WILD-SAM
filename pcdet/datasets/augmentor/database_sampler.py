@@ -75,7 +75,7 @@ class DataBaseSampler(object):
         self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
         ##################################################################################################################
         root_path_src = '/egr/research-canvas/detection3d_datasets/waymo'
-        root_path_trgt = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data'
+        root_path_trgt = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/pseudo_label_iteration_1'
         path_src = root_path_src + '/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
         path_pseudo_trgt = root_path_trgt + '/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
 
@@ -187,6 +187,9 @@ class DataBaseSampler(object):
             self.logger.info('GT database has been removed from shared memory')
 
     ################################################################################################
+    def exp_attenuation_iteration(self, x, k=5):
+        return 1.0 - 0.05 * np.exp(-k * x)
+
     def cdf_match_batch(self, source_samples, cls, box):
         box = box.reshape(1, -1)
         box_distance = np.sqrt(box[0, 0] ** 2  + box[0, 1] ** 2 + box[0, 2] ** 2)
@@ -201,8 +204,9 @@ class DataBaseSampler(object):
 
         cdf_vals_target = np.cumsum(counts_target) / counts_target.sum()
         target_samples = np.interp(source_cdf_values, cdf_vals_target, unique_vals_target)    
-        
-        return target_samples.astype(np.float32).reshape(-1, )
+        weight = self.exp_attenuation_iteration(target_samples)  
+        trgt_samples = weight * target_samples 
+        return trgt_samples.astype(np.float32).reshape(-1, )
     
 
     def process_file(self, lidar_file, root_path, index):
