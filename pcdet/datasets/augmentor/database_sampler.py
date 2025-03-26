@@ -74,66 +74,91 @@ class DataBaseSampler(object):
 
         self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
         ##################################################################################################################
+        # Define root paths for source and target datasets
         root_path_src = '/egr/research-canvas/detection3d_datasets/waymo'
-        root_path_trgt = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/pseudo_label_iteration_1'
+        root_path_trgt_base = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data'
+
+        # Define paths for source and target data
         path_src = root_path_src + '/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
-        path_pseudo_trgt = root_path_trgt + '/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_0/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        path_pseudo_trgt_1 = root_path_trgt_base + '/pseudo_label_iteration_1/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
 
         # Load the data
         data_src = self.load_pickle_file(path_src)
-        data_pseudo_trgt = self.load_pickle_file(path_pseudo_trgt)
+        data_pseudo_trgt_0 = self.load_pickle_file(path_pseudo_trgt_0)
+        data_pseudo_trgt_1 = self.load_pickle_file(path_pseudo_trgt_1)
         from concurrent.futures import ThreadPoolExecutor
-        self.intensity_classes_src = {}; self.intensity_classes_trgt = {}; self.elongation_classes_src = {}; self.elongation_classes_trgt = {}
-        self.elongation_counts_target = {}; self.elongation_counts_source = {}; self.elongation_unique_vals_target = {}; self.elongation_unique_vals_source = {}
-        self.intensity_counts_target = {}; self.intensity_counts_source = {}; self.intensity_unique_vals_target = {}; self.intensity_unique_vals_source = {}
+        self.intensity_classes_trgt_0 = {}; self.intensity_classes_trgt_1 = {}; self.intensity_classes_src = {}
+        self.intensity_counts_target_0 = {}; self.intensity_counts_target_1 = {}; self.intensity_counts_source = {}
+        self.intensity_unique_vals_target_0 = {}; self.intensity_unique_vals_target_1 = {}; self.intensity_unique_vals_source = {}
         self.range = 37.5
         skip = 5
         for cls in class_names:
+            # Process source data
             src_point_paths = [info['path'] for info in data_src.get(cls, [])][::skip]
-            pseudo_trgt_point_paths = [info['path'] for info in data_pseudo_trgt.get(cls, [])][::skip]
-
             src_point_boxes = [info['box3d_lidar'].reshape(1, -1) for info in data_src.get(cls, [])][::skip]
             src_boxes = np.concatenate(src_point_boxes, axis=0)
-            src_boxes_distance = np.sqrt(src_boxes[:, 0] ** 2  + src_boxes[:, 1] ** 2 + src_boxes[:, 2] ** 2)
-            mask_src = src_boxes_distance < self.range 
+            src_boxes_distance = np.sqrt(src_boxes[:, 0] ** 2 + src_boxes[:, 1] ** 2 + src_boxes[:, 2] ** 2)
+            mask_src = src_boxes_distance < self.range
             src_close_indices = np.where(mask_src)[0]
             src_far_indices = np.where(~mask_src)[0]
             src_point_paths_close = [src_point_paths[i] for i in src_close_indices]
             src_point_paths_far = [src_point_paths[i] for i in src_far_indices]
 
-            pseudo_trgt_point_boxes = [info['box3d_lidar'].reshape(1, -1) for info in data_pseudo_trgt.get(cls, [])][::skip]
-            pseudo_trgt_boxes = np.concatenate(pseudo_trgt_point_boxes, axis=0)
-            pseudo_trgt_boxes_distance = np.sqrt(pseudo_trgt_boxes[:, 0] ** 2  + pseudo_trgt_boxes[:, 1] ** 2 + pseudo_trgt_boxes[:, 2] ** 2)
-            mask_trgt = pseudo_trgt_boxes_distance < self.range 
-            pseudo_trgt_close_indices = np.where(mask_trgt)[0]
-            pseudo_trgt_far_indices = np.where(~mask_trgt)[0]
-            pseudo_trgt_point_paths_close = [pseudo_trgt_point_paths[i] for i in pseudo_trgt_close_indices]
-            pseudo_trgt_point_paths_far = [pseudo_trgt_point_paths[i] for i in pseudo_trgt_far_indices]
+            # Process target data for iteration 0
+            pseudo_trgt_point_paths_0 = [info['path'] for info in data_pseudo_trgt_0.get(cls, [])][::skip]
+            pseudo_trgt_point_boxes_0 = [info['box3d_lidar'].reshape(1, -1) for info in data_pseudo_trgt_0.get(cls, [])][::skip]
+            pseudo_trgt_boxes_0 = np.concatenate(pseudo_trgt_point_boxes_0, axis=0)
+            pseudo_trgt_boxes_distance_0 = np.sqrt(pseudo_trgt_boxes_0[:, 0] ** 2 + pseudo_trgt_boxes_0[:, 1] ** 2 + pseudo_trgt_boxes_0[:, 2] ** 2)
+            mask_trgt_0 = pseudo_trgt_boxes_distance_0 < self.range
+            pseudo_trgt_close_indices_0 = np.where(mask_trgt_0)[0]
+            pseudo_trgt_far_indices_0 = np.where(~mask_trgt_0)[0]
+            pseudo_trgt_point_paths_close_0 = [pseudo_trgt_point_paths_0[i] for i in pseudo_trgt_close_indices_0]
+            pseudo_trgt_point_paths_far_0 = [pseudo_trgt_point_paths_0[i] for i in pseudo_trgt_far_indices_0]
+
+            # Process target data for iteration 1
+            pseudo_trgt_point_paths_1 = [info['path'] for info in data_pseudo_trgt_1.get(cls, [])][::skip]
+            pseudo_trgt_point_boxes_1 = [info['box3d_lidar'].reshape(1, -1) for info in data_pseudo_trgt_1.get(cls, [])][::skip]
+            pseudo_trgt_boxes_1 = np.concatenate(pseudo_trgt_point_boxes_1, axis=0)
+            pseudo_trgt_boxes_distance_1 = np.sqrt(pseudo_trgt_boxes_1[:, 0] ** 2 + pseudo_trgt_boxes_1[:, 1] ** 2 + pseudo_trgt_boxes_1[:, 2] ** 2)
+            mask_trgt_1 = pseudo_trgt_boxes_distance_1 < self.range
+            pseudo_trgt_close_indices_1 = np.where(mask_trgt_1)[0]
+            pseudo_trgt_far_indices_1 = np.where(~mask_trgt_1)[0]
+            pseudo_trgt_point_paths_close_1 = [pseudo_trgt_point_paths_1[i] for i in pseudo_trgt_close_indices_1]
+            pseudo_trgt_point_paths_far_1 = [pseudo_trgt_point_paths_1[i] for i in pseudo_trgt_far_indices_1]
 
 
             with ThreadPoolExecutor() as executor:
+                # Process intensity for source data
                 results_src_intensity_close = list(executor.map(self.process_file, src_point_paths_close, [root_path_src] * len(src_point_paths_close), [3] * len(src_point_paths_close)))
                 results_src_intensity_far = list(executor.map(self.process_file, src_point_paths_far, [root_path_src] * len(src_point_paths_far), [3] * len(src_point_paths_far)))
-                results_pseudo_trgt_intensity_close = list(executor.map(self.process_file, pseudo_trgt_point_paths_close, [root_path_trgt] * len(pseudo_trgt_point_paths_close), [3] * len(pseudo_trgt_point_paths_close)))
-                results_pseudo_trgt_intensity_far = list(executor.map(self.process_file, pseudo_trgt_point_paths_far, [root_path_trgt] * len(pseudo_trgt_point_paths_far), [3] * len(pseudo_trgt_point_paths_far)))
-                # results_src_intensity = list(executor.map(self.process_file, src_point_paths, [root_path_src] * len(src_point_paths), [3] * len(src_point_paths)))
-                # results_pseudo_trgt_intensity = list(executor.map(self.process_file, pseudo_trgt_point_paths, [root_path_trgt] * len(pseudo_trgt_point_paths), [3] * len(pseudo_trgt_point_paths)))
 
-                # results_src_elongation = list(executor.map(self.process_file, src_point_paths, [root_path_src] * len(src_point_paths), [4] * len(src_point_paths)))
-                # results_pseudo_trgt_elongation = list(executor.map(self.process_file, pseudo_trgt_point_paths, [root_path_trgt] * len(pseudo_trgt_point_paths), [4] * len(pseudo_trgt_point_paths)))
-        
-            self.intensity_classes_src[cls + '_close'] = np.sort(np.concatenate(results_src_intensity_close))
-            self.intensity_classes_src[cls + '_far'] = np.sort(np.concatenate(results_src_intensity_far))
-            self.intensity_classes_trgt[cls + '_close'] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close))
-            self.intensity_classes_trgt[cls + '_far'] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far))
-            # self.elongation_classes_src[cls] = np.sort(np.concatenate(results_src_elongation))
-            # self.elongation_classes_trgt[cls] = np.sort(np.concatenate(results_pseudo_trgt_elongation))
-            self.intensity_unique_vals_source[cls + '_close'], self.intensity_counts_source[cls + '_close'] = np.unique(self.intensity_classes_src[cls + '_close'], return_counts=True)
-            self.intensity_unique_vals_source[cls + '_far'], self.intensity_counts_source[cls + '_far'] = np.unique(self.intensity_classes_src[cls + '_far'], return_counts=True)
-            self.intensity_unique_vals_target[cls + '_close'], self.intensity_counts_target[cls + '_close'] = np.unique(self.intensity_classes_trgt[cls + '_close'], return_counts=True)
-            self.intensity_unique_vals_target[cls + '_far'], self.intensity_counts_target[cls + '_far'] = np.unique(self.intensity_classes_trgt[cls + '_far'], return_counts=True)
-            # self.elongation_unique_vals_source[cls], self.elongation_counts_source[cls] = np.unique(self.elongation_classes_src[cls], return_counts=True)
-            # self.elongation_unique_vals_target[cls], self.elongation_counts_target[cls] = np.unique(self.elongation_classes_trgt[cls], return_counts=True)         
+                # Process intensity for target data iteration 0
+                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
+                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
+
+                # Process intensity for target data iteration 1
+                results_pseudo_trgt_intensity_close_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_1, [root_path_trgt_base + '/pseudo_label_iteration_1'] * len(pseudo_trgt_point_paths_close_1), [3] * len(pseudo_trgt_point_paths_close_1)))
+                results_pseudo_trgt_intensity_far_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_1, [root_path_trgt_base + '/pseudo_label_iteration_1'] * len(pseudo_trgt_point_paths_far_1), [3] * len(pseudo_trgt_point_paths_far_1)))
+
+            # Define common variable names
+            cls_close, cls_far = cls + '_close', cls + '_far'
+
+            # Combine and sort intensity data
+            self.intensity_classes_src[cls_close] = np.sort(np.concatenate(results_src_intensity_close))
+            self.intensity_classes_src[cls_far] = np.sort(np.concatenate(results_src_intensity_far))
+            self.intensity_classes_trgt_0[cls_close] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close_0))
+            self.intensity_classes_trgt_0[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_0))
+            self.intensity_classes_trgt_1[cls_close] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close_1))
+            self.intensity_classes_trgt_1[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_1))
+
+            # Get unique intensity values and counts
+            self.intensity_unique_vals_source[cls_close], self.intensity_counts_source[cls_close] = np.unique(self.intensity_classes_src[cls_close], return_counts=True)
+            self.intensity_unique_vals_source[cls_far], self.intensity_counts_source[cls_far] = np.unique(self.intensity_classes_src[cls_far], return_counts=True)
+            self.intensity_unique_vals_target_0[cls_close], self.intensity_counts_target_0[cls_close] = np.unique(self.intensity_classes_trgt_0[cls_close], return_counts=True)
+            self.intensity_unique_vals_target_0[cls_far], self.intensity_counts_target_0[cls_far] = np.unique(self.intensity_classes_trgt_0[cls_far], return_counts=True)
+            self.intensity_unique_vals_target_1[cls_close], self.intensity_counts_target_1[cls_close] = np.unique(self.intensity_classes_trgt_1[cls_close], return_counts=True)
+            self.intensity_unique_vals_target_1[cls_far], self.intensity_counts_target_1[cls_far] = np.unique(self.intensity_classes_trgt_1[cls_far], return_counts=True)
 
         # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
         weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
@@ -187,8 +212,7 @@ class DataBaseSampler(object):
             self.logger.info('GT database has been removed from shared memory')
 
     ################################################################################################
-    def exp_attenuation_iteration(self, x, k=5):
-        return 1.0 - 0.05 * np.exp(-k * x)
+
 
     def cdf_match_batch(self, source_samples, cls, box):
         box = box.reshape(1, -1)
@@ -196,17 +220,21 @@ class DataBaseSampler(object):
         dist = 'close' if box_distance < self.range else 'far'
         counts_source = self.intensity_counts_source[cls + '_' + dist]
         unique_vals_source = self.intensity_unique_vals_source[cls + '_' + dist]
-        counts_target = self.intensity_counts_target[cls + '_' + dist]
-        unique_vals_target = self.intensity_unique_vals_target[cls + '_' + dist]   
+        counts_target_0 = self.intensity_counts_target_0[cls + '_' + dist]
+        unique_vals_target_0 = self.intensity_unique_vals_target_0[cls + '_' + dist]   
+        counts_target_1 = self.intensity_counts_target_1[cls + '_' + dist]
+        unique_vals_target_1 = self.intensity_unique_vals_target_1[cls + '_' + dist]  
 
         cdf_vals_source = np.cumsum(counts_source) / counts_source.sum()
         source_cdf_values = np.interp(source_samples, unique_vals_source, cdf_vals_source)
 
-        cdf_vals_target = np.cumsum(counts_target) / counts_target.sum()
-        target_samples = np.interp(source_cdf_values, cdf_vals_target, unique_vals_target)    
-        weight = self.exp_attenuation_iteration(target_samples)  
-        trgt_samples = weight * target_samples 
-        return trgt_samples.astype(np.float32).reshape(-1, )
+        if cls == 'Vehicle':
+            cdf_vals_target_0 = np.cumsum(counts_target_0) / counts_target_0.sum()
+            target_samples = np.interp(source_cdf_values, cdf_vals_target_0, unique_vals_target_0)    
+        else:
+            cdf_vals_target_1 = np.cumsum(counts_target_1) / counts_target_1.sum()
+            target_samples = np.interp(source_cdf_values, cdf_vals_target_1, unique_vals_target_1)   
+        return target_samples.astype(np.float32).reshape(-1, )
     
 
     def process_file(self, lidar_file, root_path, index):
