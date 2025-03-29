@@ -761,7 +761,8 @@ def create_waymo_gt_database(
     train_split = 'train'
     # train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
-    train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_src_plus_target_modulated_distance_conditioned/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL1/train/default/result.pkl'
+    # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_src_plus_target_modulated_distance_conditioned/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL1/train/default/result.pkl'
+    train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_PL1_Vehicle_freezed/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL2/train/default/result.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
