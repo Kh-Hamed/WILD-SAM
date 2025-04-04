@@ -1,7 +1,7 @@
-CLASS_NAMES: ['Vehicle', 'Pedestrian', 'Cyclist']
+CLASS_NAMES: ['Vehicle', 'Pedestrian']
 
 DATA_CONFIG:
-    _BASE_CONFIG_: cfgs/dataset_configs/waymo_dataset.yaml
+    _BASE_CONFIG_: /space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/dataset_configs/waymo_dataset.yaml
 
 
 MODEL:
@@ -55,16 +55,6 @@ MODEL:
                 'feature_map_stride': 8,
                 'matched_threshold': 0.5,
                 'unmatched_threshold': 0.35
-            },
-            {
-                'class_name': 'Cyclist',
-                'anchor_sizes': [[1.78, 0.84, 1.78]],
-                'anchor_rotations': [0, 1.57],
-                'anchor_bottom_heights': [0],
-                'align_center': False,
-                'feature_map_stride': 8,
-                'matched_threshold': 0.5,
-                'unmatched_threshold': 0.35
             }
         ]
 
@@ -100,7 +90,7 @@ MODEL:
 
 
 OPTIMIZATION:
-    BATCH_SIZE_PER_GPU: 4
+    BATCH_SIZE_PER_GPU: 12
     NUM_EPOCHS: 30
 
     OPTIMIZER: adam_onecycle
