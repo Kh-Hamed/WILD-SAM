@@ -379,7 +379,13 @@ class WaymoDataset(DatasetTemplate):
             gt_boxes_T_noisy = box_utils.enlarge_box3d(
             gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
         )
-            points_T = box_utils.remove_points_in_boxes3d(points_T, gt_boxes_T_noisy)
+            point_masks_noisy_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T_noisy.numpy())
+            point_masks_accurate_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T)
+            msk_bg = point_masks_noisy_boxes.sum(axis=0) == 0
+            msk_fg = point_masks_accurate_boxes.sum(axis=0) != 0
+            mask_keep = msk_bg | msk_fg
+            points_T = points_T[mask_keep]
+            # points_T = box_utils.remove_points_in_boxes3d(points_T, gt_boxes_T_noisy)
             input_dict_T = {
             'sample_idx':int(info_T['frame_id'][-3:]),
             'points': points_T,
