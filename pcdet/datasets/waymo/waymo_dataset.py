@@ -49,8 +49,8 @@ class WaymoDataset(DatasetTemplate):
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_src_plus_target_modulated_distance_conditioned/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL1/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_PL1_Vehicle_freezed/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL2/train/default/result.pkl'
-        # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
-        info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
+        info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
+        # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
         if Path(info_path).exists():
             with open(info_path, 'rb') as f:
                 info_T = pickle.load(f)
