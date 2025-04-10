@@ -49,8 +49,9 @@ class WaymoDataset(DatasetTemplate):
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_src_plus_target_modulated_distance_conditioned/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL1/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_PL1_Vehicle_freezed/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL2/train/default/result.pkl'
-        info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
+        # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
+        info_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/waymo_processed_data_v0_5_0_infos_train.pkl'
         if Path(info_path).exists():
             with open(info_path, 'rb') as f:
                 info_T = pickle.load(f)
@@ -369,22 +370,24 @@ class WaymoDataset(DatasetTemplate):
             info_T = copy.deepcopy(self.infos_T[index])
             points_T = self.get_lidar(info_T['frame_id'][:-4], int(info_T['frame_id'][-3:]), Target= True)
 
-            msk = info_T['score'] >= 0.60
-            max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
-            msk_lwh = info_T['boxes_lidar'][:, 3:6] <= max_lwh
-            msk = msk & (msk_lwh[:, 0].reshape(-1, )  & msk_lwh[:, 1].reshape(-1, ) & msk_lwh[:, 2].reshape(-1, )) 
-            gt_boxes_T = info_T['boxes_lidar'][msk]
-            gt_boxes_T_noisy = info_T['boxes_lidar'][~msk]
-            gt_names_T = info_T['name'][msk]
-            gt_boxes_T_noisy = box_utils.enlarge_box3d(
-            gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
-        )
-            point_masks_noisy_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T_noisy.numpy())
-            point_masks_accurate_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T)
-            msk_bg = point_masks_noisy_boxes.sum(axis=0) == 0
-            msk_fg = point_masks_accurate_boxes.sum(axis=0) != 0
-            mask_keep = msk_bg | msk_fg
-            points_T = points_T[mask_keep]
+            # msk = info_T['score'] >= 0.60
+            # max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
+            # msk_lwh = info_T['boxes_lidar'][:, 3:6] <= max_lwh
+            # msk = msk & (msk_lwh[:, 0].reshape(-1, )  & msk_lwh[:, 1].reshape(-1, ) & msk_lwh[:, 2].reshape(-1, )) 
+            # gt_boxes_T = info_T['boxes_lidar'][msk]
+            gt_boxes_T = info_T['annos']['gt_boxes_lidar'][:, 0:7]
+            # gt_boxes_T_noisy = info_T['boxes_lidar'][~msk]
+            # gt_names_T = info_T['name'][msk]
+            gt_names_T = info_T['annos']['name']
+        #     gt_boxes_T_noisy = box_utils.enlarge_box3d(
+        #     gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
+        # )
+        #     point_masks_noisy_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T_noisy.numpy())
+        #     point_masks_accurate_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T)
+        #     msk_bg = point_masks_noisy_boxes.sum(axis=0) == 0
+        #     msk_fg = point_masks_accurate_boxes.sum(axis=0) != 0
+        #     mask_keep = msk_bg | msk_fg
+        #     points_T = points_T[mask_keep]
             # points_T = box_utils.remove_points_in_boxes3d(points_T, gt_boxes_T_noisy)
             input_dict_T = {
             'sample_idx':int(info_T['frame_id'][-3:]),
@@ -457,18 +460,20 @@ class WaymoDataset(DatasetTemplate):
         data_dict.pop('num_points_in_gt', None)
         ###################################################################################
         if self.training:
-            input_dict_modulated['src_modulated'] = True
-            data_dict_src_m = self.prepare_data(data_dict=input_dict_modulated)
-            data_dict_src_m['metadata'] = info.get('metadata', info['frame_id'])
-            data_dict_src_m.pop('num_points_in_gt', None)
-            data_dict_src_m.pop('src_modulated', None)
+            # input_dict_modulated['src_modulated'] = True
+            # data_dict_src_m = self.prepare_data(data_dict=input_dict_modulated)
+            # data_dict_src_m['metadata'] = info.get('metadata', info['frame_id'])
+            # data_dict_src_m.pop('num_points_in_gt', None)
+            # data_dict_src_m.pop('src_modulated', None)
             # return [data_dict, data_dict_src_m]
             if points_T.shape[0] != 0:
                 data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
                 data_dict_T['metadata'] = info_T['metadata']
-                return [data_dict, data_dict_src_m , data_dict_T]
+                # return [data_dict, data_dict_src_m , data_dict_T]
+                return [data_dict , data_dict_T]
             else:
-                return [data_dict, data_dict_src_m]
+                # return [data_dict, data_dict_src_m]
+                return [data_dict]
 
         else:
             return [data_dict]
