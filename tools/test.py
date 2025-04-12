@@ -20,12 +20,12 @@ from pcdet.utils import common_utils
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/waymo_models/second.yaml', help='specify the config for training')
+    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/waymo_models/voxel_rcnn_with_centerhead.yaml', help='specify the config for training')
 
     parser.add_argument('--batch_size', type=int, default=None, required=False, help='batch size for training')
     parser.add_argument('--workers', type=int, default=4, help='number of workers for dataloader')
     parser.add_argument('--extra_tag', type=str, default='default', help='extra tag for this experiment')
-    parser.add_argument('--ckpt', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/output/second/default/ckpt/checkpoint_epoch_30.pth', help='checkpoint to start from')
+    parser.add_argument('--ckpt', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/output/voxel_rcnn_with_centerhead/default/ckpt/checkpoint_epoch_30.pth', help='checkpoint to start from')
     parser.add_argument('--pretrained_model', type=str, default=None, help='pretrained_model')
     parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm'], default='none')
     parser.add_argument('--tcp_port', type=int, default=18888, help='tcp port for distrbuted training')
