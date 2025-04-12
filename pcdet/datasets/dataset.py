@@ -232,7 +232,7 @@ class DatasetTemplate(torch_data.Dataset):
 
         bs= 0
         bs_s= len(batch_list)
-        for i in range(2):
+        for i in range(3):
             for cur_sample_Src_Trgt in batch_list:
                 if len(cur_sample_Src_Trgt) > i:
                     for key, val in cur_sample_Src_Trgt[i].items():

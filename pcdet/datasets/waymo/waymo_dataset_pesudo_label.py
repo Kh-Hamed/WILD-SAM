@@ -742,7 +742,7 @@ def create_waymo_infos(dataset_cfg, class_names, data_path, save_path,
         return
 
     print('---------------Start create groundtruth database for data augmentation---------------')
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "7"
     dataset.set_split(train_split)
     dataset.create_groundtruth_database(
         info_path=train_filename, save_path=save_path, split='train', sampled_interval=1,
@@ -763,8 +763,9 @@ def create_waymo_gt_database(
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
     # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_src_plus_target_modulated_distance_conditioned/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL1/train/default/result.pkl'
     # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_PL1_Vehicle_freezed/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL2/train/default/result.pkl'
-    train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
+    # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
+    train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_voxel_rcnn_baseline_two_cls_WOD/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
