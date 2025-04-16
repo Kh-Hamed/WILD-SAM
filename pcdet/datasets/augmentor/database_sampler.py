@@ -737,11 +737,12 @@ class DataBaseSampler(object):
                 inside_box_mask = point_masks.sum(axis=0) > 0
                 point_fg = points[inside_box_mask]
                 if name in self.class_names:
-                    point_fg[:, 3] = self.cdf_match_batch(
-                        point_fg[:, 3].reshape(-1,),
-                        cls=name,
-                        box=data_dict['gt_boxes'][index,:]
-                    )  
+                    if point_fg.shape[0] != 0:
+                        point_fg[:, 3] = self.cdf_match_batch(
+                            point_fg[:, 3].reshape(-1,),
+                            cls=name,
+                            box=data_dict['gt_boxes'][index,:]
+                        )  
                 points_fg_modulated.append(point_fg)
 
             points_fg = np.concatenate(points_fg_modulated, axis=0)         
