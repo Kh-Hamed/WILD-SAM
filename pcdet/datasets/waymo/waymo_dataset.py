@@ -45,19 +45,26 @@ class WaymoDataset(DatasetTemplate):
         else:
             self.pred_boxes_dict = {}
         ###############################################################################################
-        self.infos_T = []
+        self.infos_T0 = []
+        self.infos_T1 = []
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_pv-rcnn++_baseline_two_cls_WOD/pv_rcnn_plusplus/default/eval/baseline_pseudo_label_two_classes/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_src_plus_target_modulated_distance_conditioned/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL1/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_WISDOM_PL1_Vehicle_freezed/pv_rcnn_plusplus/default/eval/epoch_30_WOD_PL2/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
-        info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_voxel_rcnn_baseline_two_cls_WOD/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
-        # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+        info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_voxel_rcnn_baseline_two_cls_WOD/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+        info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
         # info_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/waymo_processed_data_v0_5_0_infos_train.pkl'
-        if Path(info_path).exists():
-            with open(info_path, 'rb') as f:
-                info_T = pickle.load(f)
-                self.infos_T.extend(info_T)
+
+        if Path(info_path_T0).exists(): 
+            with open(info_path_T0, 'rb') as f:
+                info_T0 = pickle.load(f)
+                self.infos_T0.extend(info_T0)
+
+        if Path(info_path_T1).exists():
+            with open(info_path_T1, 'rb') as f:
+                info_T1 = pickle.load(f)
+                self.infos_T1.extend(info_T1)
         ###############################################################################################
 
     def set_split(self, split):
@@ -368,22 +375,71 @@ class WaymoDataset(DatasetTemplate):
         points_T = np.zeros((0, ))
         gt_boxes_T= np.zeros((0, 7))
         gt_names_T = np.zeros((0, 7)).astype(str)
-        if index < len(self.infos_T) and (self.training):
-            info_T = copy.deepcopy(self.infos_T[index])
-            points_T = self.get_lidar(info_T['frame_id'][:-4], int(info_T['frame_id'][-3:]), Target= True)
+        if index < len(self.infos_T0) and (self.training):
+            info_T0 = copy.deepcopy(self.infos_T0[index])
+            points_T = self.get_lidar(info_T0['frame_id'][:-4], int(info_T0['frame_id'][-3:]), Target= True)
 
-            msk = info_T['score'] >= 0.60
+            thresh = 0.60
+            taw = 0.20
+            msk0 = info_T0['score'] >= thresh
             max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
-            msk_lwh = info_T['boxes_lidar'][:, 3:6] <= max_lwh
-            msk = msk & (msk_lwh[:, 0].reshape(-1, )  & msk_lwh[:, 1].reshape(-1, ) & msk_lwh[:, 2].reshape(-1, )) 
-            gt_boxes_T = info_T['boxes_lidar'][msk]
-            # gt_boxes_T = info_T['annos']['gt_boxes_lidar'][:, 0:7]
-            gt_boxes_T_noisy = info_T['boxes_lidar'][~msk]
-            gt_names_T = info_T['name'][msk]
-            # gt_names_T = info_T['annos']['name']
+            lwh0 = info_T0['boxes_lidar'][:, 3:6]
+            msk_lwh0 = (lwh0 <= max_lwh).all(axis=1)
+            msk0 = msk0 & msk_lwh0
+            gt_boxes_T0 = info_T0['boxes_lidar'][msk0]
+            gt_boxes_T0_noisy = info_T0['boxes_lidar'][~msk0]
+            gt_names_T0 = info_T0['name'][msk0]
+
+            # gt_boxes_T = gt_boxes_T0
+            # gt_boxes_T_noisy = gt_boxes_T0_noisy
+            # gt_names_T = gt_names_T0
+            
+            ##########################################################################################
+            ##########################################################################################
+
+            info_T1 = copy.deepcopy(self.infos_T1[index])
+            msk1 = info_T1['score'] >= thresh
+            lwh1 = info_T1['boxes_lidar'][:, 3:6]
+            msk_lwh1 = (lwh1 <= max_lwh).all(axis=1)
+            msk1 = msk1 & msk_lwh1
+            gt_boxes_T1 = info_T1['boxes_lidar'][msk1]
+            gt_names_T1 = info_T1['name'][msk1]
+            gt_scores_T1 = info_T1['score'][msk1]
+        
+            
+            gt_boxes_T1_noisy = info_T1['boxes_lidar'][~msk1]
+            from pcdet.ops.iou3d_nms import iou3d_nms_utils
+            if gt_boxes_T0.shape[0] != 0:
+                iou = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
+                PL1_IOU_max = iou.max(axis=1) >= 0.70
+            else:
+                PL1_IOU_max = np.zeros((gt_boxes_T1.shape[0], )).astype(bool)
+
+            good_gt_boxes_T1 =  gt_boxes_T1[PL1_IOU_max]
+            good_gt_names_T1 = gt_names_T1[PL1_IOU_max]
+
+            new_gt_names_T1 =  gt_names_T1[~PL1_IOU_max]
+            new_gt_boxes_T1 =  gt_boxes_T1[~PL1_IOU_max]
+
+            new_gt_scores_T1 = gt_scores_T1[~PL1_IOU_max]
+            msk_new1 = new_gt_scores_T1 >= (thresh + taw)
+
+            new_reliable_gt_boxes_T1 = new_gt_boxes_T1[msk_new1]
+            new_reliable_gt_names_T1 = new_gt_names_T1[msk_new1]
+
+            new_unreliable_gt_boxes_T1 = new_gt_boxes_T1[~msk_new1]
+            gt_boxes_T = np.concatenate((good_gt_boxes_T1, new_reliable_gt_boxes_T1), axis=0)
+            gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, new_unreliable_gt_boxes_T1), axis=0)
+            gt_names_T = np.concatenate((good_gt_names_T1, new_reliable_gt_names_T1), axis=0)
+
+            ################################################################################################
+            ################################################################################################
+            
             gt_boxes_T_noisy = box_utils.enlarge_box3d(
             gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
-        )
+            )   
+            # gt_names_T = info_T['annos']['name']
+            # gt_boxes_T = info_T['annos']['gt_boxes_lidar'][:, 0:7]
             point_masks_noisy_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T_noisy.numpy())
             point_masks_accurate_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T)
             msk_bg = point_masks_noisy_boxes.sum(axis=0) == 0
@@ -392,9 +448,9 @@ class WaymoDataset(DatasetTemplate):
             points_T = points_T[mask_keep]
             # points_T = box_utils.remove_points_in_boxes3d(points_T, gt_boxes_T_noisy)
             input_dict_T = {
-            'sample_idx':int(info_T['frame_id'][-3:]),
+            'sample_idx':int(info_T0['frame_id'][-3:]),
             'points': points_T,
-            'frame_id': info_T['frame_id'],
+            'frame_id': info_T0['frame_id'],
             'gt_names':gt_names_T,
             'gt_boxes':gt_boxes_T
         }
@@ -470,7 +526,7 @@ class WaymoDataset(DatasetTemplate):
             # return [data_dict, data_dict_src_m]
             if points_T.shape[0] != 0:
                 data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
-                data_dict_T['metadata'] = info_T['metadata']
+                data_dict_T['metadata'] = info_T0['metadata']
                 return [data_dict, data_dict_src_m , data_dict_T]
                 # return [data_dict , data_dict_T]
             else:
