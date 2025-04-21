@@ -53,7 +53,8 @@ class WaymoDataset(DatasetTemplate):
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
         # info_path = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
         info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_voxel_rcnn_baseline_two_cls_WOD/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
-        info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+        # info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+        info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL1_iou_matching/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
         # info_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/waymo_processed_data_v0_5_0_infos_train.pkl'
 
         if Path(info_path_T0).exists(): 

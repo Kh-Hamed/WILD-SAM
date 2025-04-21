@@ -766,7 +766,8 @@ def create_waymo_gt_database(
     # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_baseline_two_cls_WOD/second/default/eval/epoch_30_baseline_pseudo_label_two_classes/train/default/result.pkl'
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_second_WISDOM_PL0/second/default/eval/epoch_30/train_PL1/default/result.pkl'
     # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_voxel_rcnn_baseline_two_cls_WOD/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
-    train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+    # train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+    train_filename =  '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL1_iou_matching/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
