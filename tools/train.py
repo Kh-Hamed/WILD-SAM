@@ -20,7 +20,7 @@ from train_utils.train_utils import train_model
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/waymo_models/voxel_rcnn_with_centerhead.yaml', help='specify the config for training')
+    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA/tools/cfgs/waymo_models/pv_rcnn_plusplus.yaml', help='specify the config for training')
 
     parser.add_argument('--batch_size', type=int, default=None, required=False, help='batch size for training')
     parser.add_argument('--epochs', type=int, default=None, required=False, help='number of epochs to train for')

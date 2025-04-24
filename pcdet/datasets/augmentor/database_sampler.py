@@ -77,11 +77,11 @@ class DataBaseSampler(object):
         ##################################################################################################################
         # Define root paths for source and target datasets
         root_path_src = '/egr/research-canvas/detection3d_datasets/waymo'
-        root_path_trgt_base = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data'
+        root_path_trgt_base = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/pv-rcnn++_pseudo_labels'
 
         # Define paths for source and target data
         path_src = root_path_src + '/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
-        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_2/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_0/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
         # path_pseudo_trgt_1 = root_path_trgt_base + '/pseudo_label_iteration_2/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
 
         # Load the data
@@ -92,7 +92,7 @@ class DataBaseSampler(object):
         self.intensity_classes_trgt_0 = {}; self.intensity_classes_trgt_1 = {}; self.intensity_classes_src = {}
         self.intensity_counts_target_0 = {}; self.intensity_counts_target_1 = {}; self.intensity_counts_source = {}
         self.intensity_unique_vals_target_0 = {}; self.intensity_unique_vals_target_1 = {}; self.intensity_unique_vals_source = {}
-        self.range = 37.5
+        self.range = 200
         skip = 5
         for cls in class_names:
             # Process source data
@@ -135,8 +135,8 @@ class DataBaseSampler(object):
                 results_src_intensity_far = list(executor.map(self.process_file, src_point_paths_far, [root_path_src] * len(src_point_paths_far), [3] * len(src_point_paths_far)))
 
                 # Process intensity for target data iteration 0
-                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
-                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
+                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
+                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
 
                 # Process intensity for target data iteration 1
                 # results_pseudo_trgt_intensity_close_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_1, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_close_1), [3] * len(pseudo_trgt_point_paths_close_1)))
@@ -147,9 +147,15 @@ class DataBaseSampler(object):
 
             # Combine and sort intensity data
             self.intensity_classes_src[cls_close] = np.sort(np.concatenate(results_src_intensity_close))
-            self.intensity_classes_src[cls_far] = np.sort(np.concatenate(results_src_intensity_far))
+            if results_src_intensity_far:
+                self.intensity_classes_src[cls_far] = np.sort(np.concatenate(results_src_intensity_far))
+            else:
+                self.intensity_classes_src[cls_far] = np.array([]) 
             self.intensity_classes_trgt_0[cls_close] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close_0))
-            self.intensity_classes_trgt_0[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_0))
+            if results_pseudo_trgt_intensity_far_0: 
+                self.intensity_classes_trgt_0[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_0))
+            else:
+                self.intensity_classes_trgt_0[cls_far] = np.array([])
             # self.intensity_classes_trgt_1[cls_close] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close_1))
             # self.intensity_classes_trgt_1[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_1))
 
