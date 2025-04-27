@@ -92,7 +92,7 @@ class DataBaseSampler(object):
         self.intensity_classes_trgt_0 = {}; self.intensity_classes_trgt_1 = {}; self.intensity_classes_src = {}
         self.intensity_counts_target_0 = {}; self.intensity_counts_target_1 = {}; self.intensity_counts_source = {}
         self.intensity_unique_vals_target_0 = {}; self.intensity_unique_vals_target_1 = {}; self.intensity_unique_vals_source = {}
-        self.range = 200
+        self.range = 37.5
         skip = 5
         for cls in class_names:
             # Process source data
