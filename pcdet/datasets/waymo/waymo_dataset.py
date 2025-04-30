@@ -55,6 +55,7 @@ class WaymoDataset(DatasetTemplate):
         # info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_baseline_two_classes_voxel_rcnn_baseline_two_cls_WOD/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
         # info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL0/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
         # info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_voxel_rcnn_WISDOM_PL1_iou_matching/voxel_rcnn_with_centerhead/default/eval/epoch_30/train/default/result.pkl'
+        info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_pv-rcnnplusplus_STEM_and_SM_range_conditioned_withOUT_bug/pv_rcnn_plusplus/default/eval/epoch_30/train/default/result.pkl'
         # info_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/waymo_processed_data_v0_5_0_infos_train.pkl'
 
         if Path(info_path_T0).exists(): 
@@ -62,10 +63,10 @@ class WaymoDataset(DatasetTemplate):
                 info_T0 = pickle.load(f)
                 self.infos_T0.extend(info_T0)
 
-        # if Path(info_path_T1).exists():
-        #     with open(info_path_T1, 'rb') as f:
-        #         info_T1 = pickle.load(f)
-        #         self.infos_T1.extend(info_T1)
+        if Path(info_path_T1).exists():
+            with open(info_path_T1, 'rb') as f:
+                info_T1 = pickle.load(f)
+                self.infos_T1.extend(info_T1)
         ###############################################################################################
 
     def set_split(self, split):
@@ -391,47 +392,47 @@ class WaymoDataset(DatasetTemplate):
             gt_boxes_T0_noisy = info_T0['boxes_lidar'][~msk0]
             gt_names_T0 = info_T0['name'][msk0]
 
-            gt_boxes_T = gt_boxes_T0
-            gt_boxes_T_noisy = gt_boxes_T0_noisy
-            gt_names_T = gt_names_T0
+            # gt_boxes_T = gt_boxes_T0
+            # gt_boxes_T_noisy = gt_boxes_T0_noisy
+            # gt_names_T = gt_names_T0
             
             ##########################################################################################
             ##########################################################################################
 
-            # info_T1 = copy.deepcopy(self.infos_T1[index])
-            # msk1 = info_T1['score'] >= thresh
-            # lwh1 = info_T1['boxes_lidar'][:, 3:6]
-            # msk_lwh1 = (lwh1 <= max_lwh).all(axis=1)
-            # msk1 = msk1 & msk_lwh1
-            # gt_boxes_T1 = info_T1['boxes_lidar'][msk1]
-            # gt_names_T1 = info_T1['name'][msk1]
-            # gt_scores_T1 = info_T1['score'][msk1]
+            info_T1 = copy.deepcopy(self.infos_T1[index])
+            msk1 = info_T1['score'] >= thresh
+            lwh1 = info_T1['boxes_lidar'][:, 3:6]
+            msk_lwh1 = (lwh1 <= max_lwh).all(axis=1)
+            msk1 = msk1 & msk_lwh1
+            gt_boxes_T1 = info_T1['boxes_lidar'][msk1]
+            gt_names_T1 = info_T1['name'][msk1]
+            gt_scores_T1 = info_T1['score'][msk1]
         
             
-            # gt_boxes_T1_noisy = info_T1['boxes_lidar'][~msk1]
-            # from pcdet.ops.iou3d_nms import iou3d_nms_utils
-            # if gt_boxes_T0.shape[0] != 0:
-            #     iou = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
-            #     PL1_IOU_max = iou.max(axis=1) >= 0.70
-            # else:
-            #     PL1_IOU_max = np.zeros((gt_boxes_T1.shape[0], )).astype(bool)
+            gt_boxes_T1_noisy = info_T1['boxes_lidar'][~msk1]
+            from pcdet.ops.iou3d_nms import iou3d_nms_utils
+            if gt_boxes_T0.shape[0] != 0:
+                iou = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
+                PL1_IOU_max = iou.max(axis=1) >= 0.70
+            else:
+                PL1_IOU_max = np.zeros((gt_boxes_T1.shape[0], )).astype(bool)
 
-            # good_gt_boxes_T1 =  gt_boxes_T1[PL1_IOU_max]
-            # good_gt_names_T1 = gt_names_T1[PL1_IOU_max]
+            good_gt_boxes_T1 =  gt_boxes_T1[PL1_IOU_max]
+            good_gt_names_T1 = gt_names_T1[PL1_IOU_max]
 
-            # new_gt_names_T1 =  gt_names_T1[~PL1_IOU_max]
-            # new_gt_boxes_T1 =  gt_boxes_T1[~PL1_IOU_max]
+            new_gt_names_T1 =  gt_names_T1[~PL1_IOU_max]
+            new_gt_boxes_T1 =  gt_boxes_T1[~PL1_IOU_max]
 
-            # new_gt_scores_T1 = gt_scores_T1[~PL1_IOU_max]
-            # msk_new1 = new_gt_scores_T1 >= (thresh + taw)
+            new_gt_scores_T1 = gt_scores_T1[~PL1_IOU_max]
+            msk_new1 = new_gt_scores_T1 >= (thresh + taw)
 
-            # new_reliable_gt_boxes_T1 = new_gt_boxes_T1[msk_new1]
-            # new_reliable_gt_names_T1 = new_gt_names_T1[msk_new1]
+            new_reliable_gt_boxes_T1 = new_gt_boxes_T1[msk_new1]
+            new_reliable_gt_names_T1 = new_gt_names_T1[msk_new1]
 
-            # new_unreliable_gt_boxes_T1 = new_gt_boxes_T1[~msk_new1]
-            # gt_boxes_T = np.concatenate((good_gt_boxes_T1, new_reliable_gt_boxes_T1), axis=0)
-            # gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, new_unreliable_gt_boxes_T1), axis=0)
-            # gt_names_T = np.concatenate((good_gt_names_T1, new_reliable_gt_names_T1), axis=0)
+            new_unreliable_gt_boxes_T1 = new_gt_boxes_T1[~msk_new1]
+            gt_boxes_T = np.concatenate((good_gt_boxes_T1, new_reliable_gt_boxes_T1), axis=0)
+            gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, new_unreliable_gt_boxes_T1), axis=0)
+            gt_names_T = np.concatenate((good_gt_names_T1, new_reliable_gt_names_T1), axis=0)
 
             ################################################################################################
             ################################################################################################

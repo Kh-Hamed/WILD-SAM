@@ -81,7 +81,7 @@ class DataBaseSampler(object):
 
         # Define paths for source and target data
         path_src = root_path_src + '/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
-        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_0/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_1/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
         # path_pseudo_trgt_1 = root_path_trgt_base + '/pseudo_label_iteration_2/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
 
         # Load the data
@@ -135,8 +135,8 @@ class DataBaseSampler(object):
                 results_src_intensity_far = list(executor.map(self.process_file, src_point_paths_far, [root_path_src] * len(src_point_paths_far), [3] * len(src_point_paths_far)))
 
                 # Process intensity for target data iteration 0
-                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
-                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
+                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_1'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
+                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_1'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
 
                 # Process intensity for target data iteration 1
                 # results_pseudo_trgt_intensity_close_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_1, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_close_1), [3] * len(pseudo_trgt_point_paths_close_1)))
