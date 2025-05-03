@@ -411,28 +411,59 @@ class WaymoDataset(DatasetTemplate):
             
             gt_boxes_T1_noisy = info_T1['boxes_lidar'][~msk1]
             from pcdet.ops.iou3d_nms import iou3d_nms_utils
-            if gt_boxes_T0.shape[0] != 0:
-                iou = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
-                PL1_IOU_max = iou.max(axis=1) >= 0.70
+            if gt_boxes_T0.shape[0] != 0 and gt_boxes_T1.shape[0] != 0:
+                iou_matrix = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
+
+                best_T1_to_T0 = iou_matrix.argmax(axis=1)  # (N1,) best T0 index for each T1
+                best_T0_to_T1 = iou_matrix.argmax(axis=0)  # (N0,) best T1 index for each T0
+
+                matched_T0_indices = []
+                matched_T1_indices = []
+
+                for i1, i0 in enumerate(best_T1_to_T0):
+                    if best_T0_to_T1[i0] == i1 and iou_matrix[i1, i0] > 0.7:
+                        matched_T0_indices.append(i0)
+                        matched_T1_indices.append(i1)
+                matched_T0 = np.array(matched_T0_indices, dtype=np.int32)
+                matched_T1 = np.array(matched_T1_indices, dtype=np.int32)
+                unmatched_T0 = np.setdiff1d(np.arange(gt_boxes_T0.shape[0]), matched_T0).astype(np.int32)
+                unmatched_T1 = np.setdiff1d(np.arange(gt_boxes_T1.shape[0]), matched_T1).astype(np.int32)
+
+            elif gt_boxes_T0.shape[0] == 0 and gt_boxes_T1.shape[0] != 0:
+                matched_T0 = np.zeros((0,), dtype=np.int32)
+                unmatched_T0 = np.zeros((0,), dtype=np.int32)
+                matched_T1 = np.zeros((0,), dtype=np.int32)
+                unmatched_T1 = np.setdiff1d(np.arange(gt_boxes_T1.shape[0]), matched_T1)
+            elif gt_boxes_T0.shape[0] != 0 and gt_boxes_T1.shape[0] == 0:
+                matched_T0 = np.zeros((0,), dtype=np.int32)
+                unmatched_T0 = np.setdiff1d(np.arange(gt_boxes_T0.shape[0]), matched_T0)
+                matched_T1 = np.zeros((0,), dtype=np.int32)
+                unmatched_T1 = np.zeros((0,), dtype=np.int32)
             else:
-                PL1_IOU_max = np.zeros((gt_boxes_T1.shape[0], )).astype(bool)
+                matched_T0 = np.zeros((0,), dtype=np.int32)
+                unmatched_T0 = np.zeros((0,), dtype=np.int32)
+                matched_T1 = np.zeros((0,), dtype=np.int32)
+                unmatched_T1 = np.zeros((0,), dtype=np.int32)
 
-            good_gt_boxes_T1 =  gt_boxes_T1[PL1_IOU_max]
-            good_gt_names_T1 = gt_names_T1[PL1_IOU_max]
 
-            new_gt_names_T1 =  gt_names_T1[~PL1_IOU_max]
-            new_gt_boxes_T1 =  gt_boxes_T1[~PL1_IOU_max]
+            matched_boxes_T1 = gt_boxes_T1[matched_T1]
+            matched_names_T1 = gt_names_T1[matched_T1]
 
-            new_gt_scores_T1 = gt_scores_T1[~PL1_IOU_max]
-            msk_new1 = new_gt_scores_T1 >= (thresh + taw)
+            new_gt_names_T1 =  gt_names_T1[unmatched_T1]
+            new_gt_boxes_T1 =  gt_boxes_T1[unmatched_T1]
 
-            new_reliable_gt_boxes_T1 = new_gt_boxes_T1[msk_new1]
-            new_reliable_gt_names_T1 = new_gt_names_T1[msk_new1]
+            new_scores_T1 = gt_scores_T1[unmatched_T1]
+            msk_new1 = new_scores_T1 >= (thresh + taw)
+
+            new_reliable_boxes_T1 = new_gt_boxes_T1[msk_new1]
+            new_reliable_names_T1 = new_gt_names_T1[msk_new1]
 
             new_unreliable_gt_boxes_T1 = new_gt_boxes_T1[~msk_new1]
-            gt_boxes_T = np.concatenate((good_gt_boxes_T1, new_reliable_gt_boxes_T1), axis=0)
-            gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, new_unreliable_gt_boxes_T1), axis=0)
-            gt_names_T = np.concatenate((good_gt_names_T1, new_reliable_gt_names_T1), axis=0)
+            unmatched_boxes_T0 = gt_boxes_T0[unmatched_T0]
+
+            gt_boxes_T = np.concatenate((matched_boxes_T1, new_reliable_boxes_T1), axis=0)
+            gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, gt_boxes_T0_noisy, unmatched_boxes_T0, new_unreliable_gt_boxes_T1), axis=0)
+            gt_names_T = np.concatenate((matched_names_T1, new_reliable_names_T1), axis=0)
 
             ################################################################################################
             ################################################################################################
