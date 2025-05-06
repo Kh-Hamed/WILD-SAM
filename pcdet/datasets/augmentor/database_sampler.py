@@ -62,13 +62,13 @@ class DataBaseSampler(object):
             }
         ##############################################################################################
         # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
-        self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo/'
+        self.db_info_path_T = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced/'
         self.db_infos_T = {}
         for class_name in class_names:
             self.db_infos_T[class_name] = []
         # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_1.pkl'
         # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
-        db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
+        db_info_T = self.db_info_path_T + 'fs_dbinfos_train_sampled_1.pkl'
         with open(str(db_info_T), 'rb') as f:
             infos_T = pickle.load(f)
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]
@@ -76,12 +76,12 @@ class DataBaseSampler(object):
         self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
         ##################################################################################################################
         # Define root paths for source and target datasets
-        root_path_src = '/egr/research-canvas/detection3d_datasets/waymo'
-        root_path_trgt_base = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/pv-rcnn++_pseudo_labels'
+        root_path_src = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced'
+        root_path_trgt_base = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/pv-rcnn++'
 
         # Define paths for source and target data
-        path_src = root_path_src + '/waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_5.pkl'
-        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_1/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
+        path_src = root_path_src + '/fs_dbinfos_train_sampled_1.pkl'
+        path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_0/fs_pseudo_dbinfos_train_sampled_1.pkl'
         # path_pseudo_trgt_1 = root_path_trgt_base + '/pseudo_label_iteration_2/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
 
         # Load the data
@@ -135,8 +135,8 @@ class DataBaseSampler(object):
                 results_src_intensity_far = list(executor.map(self.process_file, src_point_paths_far, [root_path_src] * len(src_point_paths_far), [3] * len(src_point_paths_far)))
 
                 # Process intensity for target data iteration 0
-                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_1'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
-                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_1'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
+                results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
+                results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
 
                 # Process intensity for target data iteration 1
                 # results_pseudo_trgt_intensity_close_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_1, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_close_1), [3] * len(pseudo_trgt_point_paths_close_1)))
@@ -168,7 +168,7 @@ class DataBaseSampler(object):
             # self.intensity_unique_vals_target_1[cls_far], self.intensity_counts_target_1[cls_far] = np.unique(self.intensity_classes_trgt_1[cls_far], return_counts=True)
 
         # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
-        weight = {'Vehicle': 0.70, 'Pedestrian': 0.90, 'Cyclist': 0.90}
+        weight = {'Car': 0.70, 'Pedestrian': 0.90, 'Bike': 0.90}
         for cur_class in class_names:
             info_T_cls = self.db_infos_T[cur_class]
             summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
@@ -247,7 +247,7 @@ class DataBaseSampler(object):
     def process_file(self, lidar_file, root_path, index):
         file_path = root_path + '/' + lidar_file
         points_all = np.fromfile(str(file_path), dtype=np.float32).reshape(
-            [-1, 5])  # (N, 7): [x, y, z, intensity, elongation, NLZ_flag]   
+            [-1, 4])  # (N, 7): [x, y, z, intensity, elongation, NLZ_flag]   
         return points_all[:, index]  # Return processed intensity column
 
     def load_pickle_file(self, path):
@@ -607,6 +607,38 @@ class DataBaseSampler(object):
 
             assert obj_points.shape[0] == info['num_points_in_gt']
             #################################################################################
+            if self.sampler_cfg.get('GROUND_HEIGHT', False):
+                z_ground = self.sampler_cfg.GROUND_HEIGHT
+                if gt_boxes.shape[0]:
+                    dis = gt_boxes[:,0:3]-info['box3d_lidar'][0:3]
+                    # dis = np.sum(np.abs(dis), axis=1)
+                    dis = np.sqrt(np.sum(dis**2, axis=1))
+                    idx_min = np.argmin(dis)
+
+                    # dis_origin = np.sum(np.abs(info['box3d_lidar'][0:3]))
+                    dis_origin = np.sqrt(np.sum(info['box3d_lidar'][0:3] ** 2))
+                    if dis[idx_min] < dis_origin:
+                        z_ground = gt_boxes[idx_min,2]-gt_boxes[idx_min,5]/2.0
+
+                from pcdet.ops.roiaware_pool3d import roiaware_pool3d_utils
+                xyz = copy.deepcopy(info['box3d_lidar'][0:3])
+                lwh = copy.deepcopy(info['box3d_lidar'][3:6])
+                rz = copy.deepcopy(info['box3d_lidar'][6:])
+                xyz[2] = z_ground+ lwh[2]/2.0 
+                box = np.concatenate((xyz, lwh + np.array([4, 4, 2]), rz), ).reshape(-1, 7)
+                point_masks = roiaware_pool3d_utils.points_in_boxes_cpu(points[:, 0:3], box)
+                if points[(point_masks == 1)[0]].shape[0]:
+                    a = points[(point_masks == 1)[0], 2]
+                    z_grounds_points = np.min(points[(point_masks == 1)[0], 2])
+                    z_ground = np.clip(z_grounds_points, -3, 0)
+                    xyz[2] = z_ground+ lwh[2]/2.0
+
+                sampled_gt_boxes[idx,0:3] = xyz            
+                sampled_gt_boxes[idx,3:6] = lwh   
+                obj_points[:, :3] += xyz
+            else:
+                obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
+                
             if Target is True:
                 # option = np.random.choice(["intensity", "sparsity"], p=[0.5, 0.5])
                 # if option in ["sparsity"]:
@@ -619,7 +651,6 @@ class DataBaseSampler(object):
                     cls=info['name'],
                     box=info['box3d_lidar'])
             #################################################################################
-            obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 
             if self.sampler_cfg.get('USE_ROAD_PLANE', False):
                 # mv height
