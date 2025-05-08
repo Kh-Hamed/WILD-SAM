@@ -160,8 +160,8 @@ class FourSeasonDataset(DatasetTemplate):
             info_T0 = copy.deepcopy(self.infos_T0[index])
             points_T = self.get_lidar(info_T0['frame_id'], Target= True)
 
-            thresh = 0.60
-            taw = 0.20
+            thresh = 0.80
+            taw = 0.10
             msk0 = info_T0['score'] >= thresh
             max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
             lwh0 = info_T0['boxes_lidar'][:, 3:6]
