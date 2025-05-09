@@ -54,10 +54,9 @@ class FourSeasonDataset(DatasetTemplate):
         ###############################################################################################
         self.infos_T0 = []
         self.infos_T1 = []
-        info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/default/eval/epoch_80/train/default/result.pkl'
+        # info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/default/eval/epoch_80/train/default/result.pkl'
+        info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/2023_late_summer_5min_balanced/eval/epoch_80/train/2023_snow_5min_balanced/result.pkl'
         # info_path_T1 = '/space/userfiles/alyaqou1/det3d/output/pv_rcnn_plusplus/2023_neighborhood_fall_5min_balanced/eval/epoch_80/val/2023_neighborhood_fall_5min_balanced/result.pkl'
-        # info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_pv-rcnnplusplus_PL1_withOUT_bug_noisy_PL0&PL1_removal/pv_rcnn_plusplus/default/eval/epoch_30/train/default/result.pkl'
-        # info_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/waymo_processed_data_v0_5_0_infos_train.pkl'
 
         if Path(info_path_T0).exists(): 
             with open(info_path_T0, 'rb') as f:

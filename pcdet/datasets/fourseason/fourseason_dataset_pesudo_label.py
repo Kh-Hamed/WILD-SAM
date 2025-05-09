@@ -51,25 +51,6 @@ class FourSeasonDataset(DatasetTemplate):
         self.set_split()
         self.include_fs_data(self.mode)
 
-        ###############################################################################################
-        self.infos_T0 = []
-        self.infos_T1 = []
-        info_path_T0 = '/space/userfiles/alyaqou1/det3d/output/pv_rcnn_plusplus/2023_neighborhood_fall_5min_balanced/eval/epoch_80/val/2023_neighborhood_fall_5min_balanced/result.pkl'
-        info_path_T1 = '/space/userfiles/alyaqou1/det3d/output/pv_rcnn_plusplus/2023_neighborhood_fall_5min_balanced/eval/epoch_80/val/2023_neighborhood_fall_5min_balanced/result.pkl'
-        # info_path_T1 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA/output_ablation_pv-rcnnplusplus_PL1_withOUT_bug_noisy_PL0&PL1_removal/pv_rcnn_plusplus/default/eval/epoch_30/train/default/result.pkl'
-        # info_path = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/waymo_processed_data_v0_5_0_infos_train.pkl'
-
-        if Path(info_path_T0).exists(): 
-            with open(info_path_T0, 'rb') as f:
-                info_T0 = pickle.load(f)
-                self.infos_T0.extend(info_T0)
-
-        if Path(info_path_T1).exists():
-            with open(info_path_T1, 'rb') as f:
-                info_T1 = pickle.load(f)
-                self.infos_T1.extend(info_T1)
-        ###############################################################################################
-
         
 
 
@@ -674,7 +655,8 @@ def create_fs_gt_database(
 
     train_split = 'train'
     # train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
-    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/default/eval/epoch_80/train/default/result.pkl'
+    # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/default/eval/epoch_80/train/default/result.pkl'
+    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/2023_late_summer_5min_balanced/eval/epoch_80/train/2023_snow_5min_balanced/result.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
@@ -705,7 +687,7 @@ if __name__ == '__main__':
     # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
 
     # ROOT_DIR = Path('data/fourseason/ImageSets/2022_rain_5min_balanced')
-    ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/pv-rcnn++')
+    ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/pv-rcnn++/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced')
     # ROOT_DIR = Path('data/fourseason/ImageSets/')
 
     if args.func == 'filter_fs_infos':
