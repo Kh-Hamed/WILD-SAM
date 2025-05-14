@@ -78,7 +78,7 @@ class DataBaseSampler(object):
         # Define root paths for source and target datasets
         root_path_src = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced'
         # root_path_trgt_base = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/pv-rcnn++/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced'
-        root_path_trgt_base = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/voxel_rcnn/2023_late_summer_5min_balanced_to_2022_rain_5min_balanced'
+        root_path_trgt_base = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/voxel_rcnn/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced'
 
         # Define paths for source and target data
         path_src = root_path_src + '/fs_dbinfos_train_sampled_1.pkl'

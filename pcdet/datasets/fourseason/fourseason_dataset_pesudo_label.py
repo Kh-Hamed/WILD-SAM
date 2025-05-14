@@ -657,7 +657,8 @@ def create_fs_gt_database(
     # train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/default/eval/epoch_80/train/default/result.pkl'
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/2023_late_summer_5min_balanced/eval/epoch_80/train/2023_snow_5min_balanced/result.pkl'
-    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/voxel_rcnn/2023_late_summer_5min_balanced/eval/epoch_80/train/2022_rain_5min_balanced/result.pkl'
+    # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/voxel_rcnn/2023_late_summer_5min_balanced/eval/epoch_80/train/2022_rain_5min_balanced/result.pkl'
+    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/voxel_rcnn/2023_late_summer_5min_balanced/eval/epoch_80/train/2023_snow_5min_balanced/result.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
@@ -688,7 +689,7 @@ if __name__ == '__main__':
     # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
 
     # ROOT_DIR = Path('data/fourseason/ImageSets/2022_rain_5min_balanced')
-    ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/voxel_rcnn/2023_late_summer_5min_balanced_to_2022_rain_5min_balanced/pseudo_label_iteration_0')
+    ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/voxel_rcnn/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced/pseudo_label_iteration_0')
     # ROOT_DIR = Path('data/fourseason/ImageSets/')
 
     if args.func == 'filter_fs_infos':

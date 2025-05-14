@@ -24,8 +24,8 @@ def parse_config():
 
     parser.add_argument('--batch_size', type=int, default=None, required=False, help='batch size for training')
     parser.add_argument('--workers', type=int, default=4, help='number of workers for dataloader')
-    parser.add_argument('--extra_tag', type=str, default='2023_late_summer_5min_balanced', help='extra tag for this experiment')
-    parser.add_argument('--ckpt', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output/voxel_rcnn/2023_late_summer_5min_balanced_to_2022_rain_5min_balanced/ckpt/checkpoint_epoch_80.pth', help='checkpoint to start from')
+    parser.add_argument('--extra_tag', type=str, default='2023_late_summer_5min_balanced_to_2023_snow_5min_balanced', help='extra tag for this experiment')
+    parser.add_argument('--ckpt', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output/voxel_rcnn/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced/ckpt/checkpoint_epoch_80.pth', help='checkpoint to start from')
     parser.add_argument('--pretrained_model', type=str, default=None, help='pretrained_model')
     parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm'], default='none')
     parser.add_argument('--tcp_port', type=int, default=18888, help='tcp port for distrbuted training')
@@ -35,7 +35,7 @@ def parse_config():
 
     parser.add_argument('--max_waiting_mins', type=int, default=30, help='max waiting minutes')
     parser.add_argument('--start_epoch', type=int, default=0, help='')
-    parser.add_argument('--eval_tag', type=str, default='2022_rain_5min_balanced', help='eval tag for this experiment')
+    parser.add_argument('--eval_tag', type=str, default='2023_snow_5min_balanced', help='eval tag for this experiment')
     parser.add_argument('--eval_all', action='store_true', default=False, help='whether to evaluate all checkpoints')
     parser.add_argument('--ckpt_dir', type=str, default=None, help='specify a ckpt directory to be evaluated if needed')
     parser.add_argument('--save_to_file', action='store_true', default=False, help='')
