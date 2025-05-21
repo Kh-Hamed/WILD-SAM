@@ -155,7 +155,7 @@ class FourSeasonDataset(DatasetTemplate):
         ######################################################################
         points_T = np.zeros((0, ))
         gt_boxes_T= np.zeros((0, 7))
-        gt_names_T = np.zeros((0, 7)).astype(str)
+        gt_names_T = np.zeros((0, )).astype(str)
         if index < len(self.infos_T0) and (self.training):
             info_T0 = copy.deepcopy(self.infos_T0[index])
             points_T = self.get_lidar(info_T0['frame_id'], Target= True)
@@ -293,14 +293,14 @@ class FourSeasonDataset(DatasetTemplate):
             data_dict_src_m = self.prepare_data(data_dict=input_dict_modulated)
             data_dict_src_m.pop('num_points_in_gt', None)
             data_dict_src_m.pop('src_modulated', None)
-            # return [data_dict, data_dict_src_m]
-            if points_T.shape[0] != 0:
-                data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
-                return [data_dict, data_dict_src_m , data_dict_T]
-                # return [data_dict , data_dict_T]
-            else:
-                return [data_dict, data_dict_src_m]
-                # return [data_dict]
+            return [data_dict, data_dict_src_m]
+            # if points_T.shape[0] != 0:
+            #     data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
+            #     return [data_dict, data_dict_src_m , data_dict_T]
+            #     # return [data_dict , data_dict_T]
+            # else:
+            #     return [data_dict, data_dict_src_m]
+            #     # return [data_dict]
 
         else:
             return [data_dict]
