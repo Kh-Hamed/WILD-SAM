@@ -289,18 +289,18 @@ class FourSeasonDataset(DatasetTemplate):
         data_dict.pop('num_points_in_gt', None)
         ###################################################################################
         if self.training:
-            # input_dict_modulated['src_modulated'] = True
-            # data_dict_src_m = self.prepare_data(data_dict=input_dict_modulated)
-            # data_dict_src_m.pop('num_points_in_gt', None)
-            # data_dict_src_m.pop('src_modulated', None)
+            input_dict_modulated['src_modulated'] = True
+            data_dict_src_m = self.prepare_data(data_dict=input_dict_modulated)
+            data_dict_src_m.pop('num_points_in_gt', None)
+            data_dict_src_m.pop('src_modulated', None)
             # return [data_dict, data_dict_src_m]
             if points_T.shape[0] != 0:
                 data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
-                # return [data_dict, data_dict_src_m , data_dict_T]
-                return [data_dict , data_dict_T]
+                return [data_dict, data_dict_src_m , data_dict_T]
+                # return [data_dict , data_dict_T]
             else:
-                # return [data_dict, data_dict_src_m]
-                return [data_dict]
+                return [data_dict, data_dict_src_m]
+                # return [data_dict]
 
         else:
             return [data_dict]
