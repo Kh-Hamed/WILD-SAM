@@ -1,7 +1,7 @@
 DATASET: 'FourSeasonDataset'
 
-DATA_PATH: '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced'
-PATH_LIDAR : '/egr/research-canvas/four_seasons/dataset/2023_late_summer/oust'
+DATA_PATH: '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow'
+PATH_LIDAR : '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow/point_clouds'
 PATH_LABEL: '/egr/research-canvas/detection3d_datasets/four_seasons/imerit_check/new_filtered_label3d/minpts_5/2023_late_summer'
 
 DATA_PATH_T: '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow/point_clouds'
