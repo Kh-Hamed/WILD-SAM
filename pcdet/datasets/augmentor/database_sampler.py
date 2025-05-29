@@ -63,7 +63,7 @@ class DataBaseSampler(object):
         ##############################################################################################
         # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
         # self.db_info_path_T = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced/'
-        self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow/'
+        self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/'
         self.db_infos_T = {}
         for class_name in class_names:
             self.db_infos_T[class_name] = []

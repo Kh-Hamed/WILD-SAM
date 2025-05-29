@@ -4,7 +4,7 @@ DATA_PATH: '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_
 PATH_LIDAR : '/egr/research-canvas/four_seasons/dataset/2023_late_summer/oust'
 PATH_LABEL: '/egr/research-canvas/detection3d_datasets/four_seasons/imerit_check/new_filtered_label3d/minpts_5/2023_late_summer'
 
-DATA_PATH_T: '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow/point_clouds'
+DATA_PATH_T: '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/point_clouds'
 
 POINT_CLOUD_RANGE: [-75.2, -75.2, -4, 75.2, 75.2, 2]
 
