@@ -51,26 +51,6 @@ class FourSeasonDataset(DatasetTemplate):
         self.set_split()
         self.include_fs_data(self.mode)
 
-        ###############################################################################################
-        self.infos_T0 = []
-        self.infos_T1 = []
-        # info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/default/eval/epoch_80/train/default/result.pkl'
-        # info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/output_baseline_seasons/pv_rcnn_plusplus/2023_late_summer_5min_balanced/eval/epoch_80/train/2023_snow_5min_balanced/result.pkl'
-        # info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/fs_infos_train.pkl'
-        info_path_T0 = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/fs_DALI_infos_train.pkl'
-        # info_path_T1 = '/space/userfiles/alyaqou1/det3d/output/pv_rcnn_plusplus/2023_neighborhood_fall_5min_balanced/eval/epoch_80/val/2023_neighborhood_fall_5min_balanced/result.pkl'
-
-        if Path(info_path_T0).exists(): 
-            with open(info_path_T0, 'rb') as f:
-                info_T0 = pickle.load(f)
-                self.infos_T0.extend(info_T0)
-
-        # if Path(info_path_T1).exists():
-        #     with open(info_path_T1, 'rb') as f:
-        #         info_T1 = pickle.load(f)
-        #         self.infos_T1.extend(info_T1)
-        ###############################################################################################
-
         
 
 
@@ -106,25 +86,30 @@ class FourSeasonDataset(DatasetTemplate):
         else:
             self.split_dir = self.root_path  / (self.split + '.txt')
         
+        if self.split_dir.exists():
+            fopen = open(self.split_dir, 'r')
+            relative_path = fopen.readlines()
+            fopen.close()        
 
-        fopen = open(self.split_dir, 'r')
-        relative_path = fopen.readlines()
-        fopen.close()        
+            names_with_Batch = [f[0:-14] for f in relative_path]
+            names = [f.split('/')[1] for f in names_with_Batch] 
+            self.names_list = names          
+            self.points_list = [self.path_lidar+'/'+f+'.npy' for f in names]
+            # self.points_list = [self.path_lidar+'/'+f+'_oust.txt' for f in names]
+            self.labels_list = [self.path_label+'/'+f+'.npy' for f in names]
+        else:
+            self.points_list = []
+            self.labels_list = []
+            self.names_list = []
 
-        names_with_Batch = [f[0:-14] for f in relative_path]
-        names = [f.split('/')[1] for f in names_with_Batch] 
-        self.names_list = names          
-        self.points_list = [self.path_lidar+'/'+f+'_oust.pcd' for f in names]
-        # self.points_list = [self.path_lidar+'/'+f+'_oust.txt' for f in names]
-        self.labels_list = [self.path_label+'/'+f+'_label3d.yaml' for f in names_with_Batch]
 
 
     def get_lidar(self, sequence_name, Target = False,  path = None):
         if path ==None and not Target:
             
-            lidar_file = Path(self.path_lidar) / Path(sequence_name + '_oust.pcd' )
-            points_all = PointCloud.from_path(lidar_file)
-            pc = points_all.numpy().astype(np.float32)     
+            lidar_file = Path(self.path_lidar) / Path(sequence_name + '.npy' )
+            points_all = np.load(lidar_file)
+            pc = points_all.astype(np.float32)     
             pc[:, 3] = np.log10(pc[:, 3]  + 1)
             pointcloud = pc[:, 0:4]
 
@@ -134,7 +119,6 @@ class FourSeasonDataset(DatasetTemplate):
             pc = points_all.astype(np.float32)     
             pc[:, 3] = np.log10(pc[:, 3]  + 1)
             pointcloud = pc[:, 0:4]
-        
         return pointcloud
 
 
@@ -159,18 +143,18 @@ class FourSeasonDataset(DatasetTemplate):
         gt_names_T = np.zeros((0, )).astype(str)
         if index < len(self.infos_T0) and (self.training):
             info_T0 = copy.deepcopy(self.infos_T0[index])
-            points_T = self.get_lidar(info_T0['point_cloud']['lidar_sequence'], Target= True)
+            points_T = self.get_lidar(info_T0['frame_id'], Target= True)
 
-            # thresh = 0.80
-            # taw = 0.10
-            # msk0 = info_T0['score'] >= thresh
-            # max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
-            # lwh0 = info_T0['boxes_lidar'][:, 3:6]
-            # msk_lwh0 = (lwh0 <= max_lwh).all(axis=1)
-            # msk0 = msk0 & msk_lwh0
-            # gt_boxes_T0 = info_T0['boxes_lidar'][msk0]
-            # gt_boxes_T0_noisy = info_T0['boxes_lidar'][~msk0]
-            # gt_names_T0 = info_T0['name'][msk0]
+            thresh = 0.60
+            taw = 0.20
+            msk0 = info_T0['score'] >= thresh
+            max_lwh = 1.25 * np.array([4.67, 2.09, 1.71]).reshape(-1, 3)
+            lwh0 = info_T0['boxes_lidar'][:, 3:6]
+            msk_lwh0 = (lwh0 <= max_lwh).all(axis=1)
+            msk0 = msk0 & msk_lwh0
+            gt_boxes_T0 = info_T0['boxes_lidar'][msk0]
+            gt_boxes_T0_noisy = info_T0['boxes_lidar'][~msk0]
+            gt_names_T0 = info_T0['name'][msk0]
 
             # gt_boxes_T = gt_boxes_T0
             # gt_boxes_T_noisy = gt_boxes_T0_noisy
@@ -179,92 +163,92 @@ class FourSeasonDataset(DatasetTemplate):
             ##########################################################################################
             ##########################################################################################
 
-            # info_T1 = copy.deepcopy(self.infos_T1[index])
-            # msk1 = info_T1['score'] >= thresh
-            # lwh1 = info_T1['boxes_lidar'][:, 3:6]
-            # msk_lwh1 = (lwh1 <= max_lwh).all(axis=1)
-            # msk1 = msk1 & msk_lwh1
-            # gt_boxes_T1 = info_T1['boxes_lidar'][msk1]
-            # gt_names_T1 = info_T1['name'][msk1]
-            # gt_scores_T1 = info_T1['score'][msk1]
+            info_T1 = copy.deepcopy(self.infos_T1[index])
+            msk1 = info_T1['score'] >= thresh
+            lwh1 = info_T1['boxes_lidar'][:, 3:6]
+            msk_lwh1 = (lwh1 <= max_lwh).all(axis=1)
+            msk1 = msk1 & msk_lwh1
+            gt_boxes_T1 = info_T1['boxes_lidar'][msk1]
+            gt_names_T1 = info_T1['name'][msk1]
+            gt_scores_T1 = info_T1['score'][msk1]
         
             
-            # gt_boxes_T1_noisy = info_T1['boxes_lidar'][~msk1]
-            # from pcdet.ops.iou3d_nms import iou3d_nms_utils
-            # if gt_boxes_T0.shape[0] != 0 and gt_boxes_T1.shape[0] != 0:
-            #     iou_matrix = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
+            gt_boxes_T1_noisy = info_T1['boxes_lidar'][~msk1]
+            from pcdet.ops.iou3d_nms import iou3d_nms_utils
+            if gt_boxes_T0.shape[0] != 0 and gt_boxes_T1.shape[0] != 0:
+                iou_matrix = iou3d_nms_utils.boxes_bev_iou_cpu(gt_boxes_T1[:, 0:7], gt_boxes_T0[:, 0:7])
 
-            #     best_T1_to_T0 = iou_matrix.argmax(axis=1)  # (N1,) best T0 index for each T1
-            #     best_T0_to_T1 = iou_matrix.argmax(axis=0)  # (N0,) best T1 index for each T0
+                best_T1_to_T0 = iou_matrix.argmax(axis=1)  # (N1,) best T0 index for each T1
+                best_T0_to_T1 = iou_matrix.argmax(axis=0)  # (N0,) best T1 index for each T0
 
-            #     matched_T0_indices = []
-            #     matched_T1_indices = []
+                matched_T0_indices = []
+                matched_T1_indices = []
 
-            #     for i1, i0 in enumerate(best_T1_to_T0):
-            #         if best_T0_to_T1[i0] == i1 and iou_matrix[i1, i0] > 0.7:
-            #             matched_T0_indices.append(i0)
-            #             matched_T1_indices.append(i1)
-            #     matched_T0 = np.array(matched_T0_indices, dtype=np.int32)
-            #     matched_T1 = np.array(matched_T1_indices, dtype=np.int32)
-            #     unmatched_T0 = np.setdiff1d(np.arange(gt_boxes_T0.shape[0]), matched_T0).astype(np.int32)
-            #     unmatched_T1 = np.setdiff1d(np.arange(gt_boxes_T1.shape[0]), matched_T1).astype(np.int32)
+                for i1, i0 in enumerate(best_T1_to_T0):
+                    if best_T0_to_T1[i0] == i1 and iou_matrix[i1, i0] > 0.7:
+                        matched_T0_indices.append(i0)
+                        matched_T1_indices.append(i1)
+                matched_T0 = np.array(matched_T0_indices, dtype=np.int32)
+                matched_T1 = np.array(matched_T1_indices, dtype=np.int32)
+                unmatched_T0 = np.setdiff1d(np.arange(gt_boxes_T0.shape[0]), matched_T0).astype(np.int32)
+                unmatched_T1 = np.setdiff1d(np.arange(gt_boxes_T1.shape[0]), matched_T1).astype(np.int32)
 
-            # elif gt_boxes_T0.shape[0] == 0 and gt_boxes_T1.shape[0] != 0:
-            #     matched_T0 = np.zeros((0,), dtype=np.int32)
-            #     unmatched_T0 = np.zeros((0,), dtype=np.int32)
-            #     matched_T1 = np.zeros((0,), dtype=np.int32)
-            #     unmatched_T1 = np.setdiff1d(np.arange(gt_boxes_T1.shape[0]), matched_T1)
-            # elif gt_boxes_T0.shape[0] != 0 and gt_boxes_T1.shape[0] == 0:
-            #     matched_T0 = np.zeros((0,), dtype=np.int32)
-            #     unmatched_T0 = np.setdiff1d(np.arange(gt_boxes_T0.shape[0]), matched_T0)
-            #     matched_T1 = np.zeros((0,), dtype=np.int32)
-            #     unmatched_T1 = np.zeros((0,), dtype=np.int32)
-            # else:
-            #     matched_T0 = np.zeros((0,), dtype=np.int32)
-            #     unmatched_T0 = np.zeros((0,), dtype=np.int32)
-            #     matched_T1 = np.zeros((0,), dtype=np.int32)
-            #     unmatched_T1 = np.zeros((0,), dtype=np.int32)
+            elif gt_boxes_T0.shape[0] == 0 and gt_boxes_T1.shape[0] != 0:
+                matched_T0 = np.zeros((0,), dtype=np.int32)
+                unmatched_T0 = np.zeros((0,), dtype=np.int32)
+                matched_T1 = np.zeros((0,), dtype=np.int32)
+                unmatched_T1 = np.setdiff1d(np.arange(gt_boxes_T1.shape[0]), matched_T1)
+            elif gt_boxes_T0.shape[0] != 0 and gt_boxes_T1.shape[0] == 0:
+                matched_T0 = np.zeros((0,), dtype=np.int32)
+                unmatched_T0 = np.setdiff1d(np.arange(gt_boxes_T0.shape[0]), matched_T0)
+                matched_T1 = np.zeros((0,), dtype=np.int32)
+                unmatched_T1 = np.zeros((0,), dtype=np.int32)
+            else:
+                matched_T0 = np.zeros((0,), dtype=np.int32)
+                unmatched_T0 = np.zeros((0,), dtype=np.int32)
+                matched_T1 = np.zeros((0,), dtype=np.int32)
+                unmatched_T1 = np.zeros((0,), dtype=np.int32)
 
 
-            # matched_boxes_T1 = gt_boxes_T1[matched_T1]
-            # matched_names_T1 = gt_names_T1[matched_T1]
+            matched_boxes_T1 = gt_boxes_T1[matched_T1]
+            matched_names_T1 = gt_names_T1[matched_T1]
 
-            # new_gt_names_T1 =  gt_names_T1[unmatched_T1]
-            # new_gt_boxes_T1 =  gt_boxes_T1[unmatched_T1]
+            new_gt_names_T1 =  gt_names_T1[unmatched_T1]
+            new_gt_boxes_T1 =  gt_boxes_T1[unmatched_T1]
 
-            # new_scores_T1 = gt_scores_T1[unmatched_T1]
-            # msk_new1 = new_scores_T1 >= (thresh + taw)
+            new_scores_T1 = gt_scores_T1[unmatched_T1]
+            msk_new1 = new_scores_T1 >= (thresh + taw)
 
-            # new_reliable_boxes_T1 = new_gt_boxes_T1[msk_new1]
-            # new_reliable_names_T1 = new_gt_names_T1[msk_new1]
+            new_reliable_boxes_T1 = new_gt_boxes_T1[msk_new1]
+            new_reliable_names_T1 = new_gt_names_T1[msk_new1]
 
-            # new_unreliable_gt_boxes_T1 = new_gt_boxes_T1[~msk_new1]
-            # unmatched_boxes_T0 = gt_boxes_T0[unmatched_T0]
+            new_unreliable_gt_boxes_T1 = new_gt_boxes_T1[~msk_new1]
+            unmatched_boxes_T0 = gt_boxes_T0[unmatched_T0]
 
-            # gt_boxes_T = np.concatenate((matched_boxes_T1, new_reliable_boxes_T1), axis=0)
-            # gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, gt_boxes_T0_noisy, unmatched_boxes_T0, new_unreliable_gt_boxes_T1), axis=0)
-            # gt_names_T = np.concatenate((matched_names_T1, new_reliable_names_T1), axis=0)
+            gt_boxes_T = np.concatenate((matched_boxes_T1, new_reliable_boxes_T1), axis=0)
+            gt_boxes_T_noisy = np.concatenate((gt_boxes_T1_noisy, gt_boxes_T0_noisy, unmatched_boxes_T0, new_unreliable_gt_boxes_T1), axis=0)
+            gt_names_T = np.concatenate((matched_names_T1, new_reliable_names_T1), axis=0)
 
             ################################################################################################
             ################################################################################################
             
-            # gt_boxes_T_noisy = box_utils.enlarge_box3d(
-            # gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
-            # )   
-            gt_names_T = info_T0['annos']['gt_names']
-            gt_boxes_T = info_T0['annos']['gt_boxes_lidar'].reshape(-1, 7)[:, 0:7]
-            # point_masks_noisy_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T_noisy.numpy())
-            # point_masks_accurate_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T)
-            # msk_bg = point_masks_noisy_boxes.sum(axis=0) == 0
-            # msk_fg = point_masks_accurate_boxes.sum(axis=0) != 0
-            # mask_keep = msk_bg | msk_fg
-            # points_T = points_T[mask_keep]
+            gt_boxes_T_noisy = box_utils.enlarge_box3d(
+            gt_boxes_T_noisy[:, 0:7], extra_width=(0.25, 0.25, 0.0)
+            )   
+            # gt_names_T = info_T['annos']['name']
+            # gt_boxes_T = info_T['annos']['gt_boxes_lidar'][:, 0:7]
+            point_masks_noisy_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T_noisy.numpy())
+            point_masks_accurate_boxes = roiaware_pool3d_utils.points_in_boxes_cpu(points_T[:, 0:3], gt_boxes_T)
+            msk_bg = point_masks_noisy_boxes.sum(axis=0) == 0
+            msk_fg = point_masks_accurate_boxes.sum(axis=0) != 0
+            mask_keep = msk_bg | msk_fg
+            points_T = points_T[mask_keep]
             # points_T = box_utils.remove_points_in_boxes3d(points_T, gt_boxes_T_noisy)
-            input_dict_bgT_fgT = {
+            input_dict_T = {
             'points': points_T,
             'gt_boxes':gt_boxes_T,
             'gt_names':gt_names_T,
-            'frame_id': info_T0['point_cloud']['lidar_sequence'],
+            'frame_id': info_T0['frame_id'],
             'calib': None,
             'image_shape': 0
         }
@@ -274,9 +258,9 @@ class FourSeasonDataset(DatasetTemplate):
         points = self.get_lidar(info['point_cloud']['lidar_sequence'])
 
         
-        gt_boxes = info['annos']['gt_boxes_lidar'].reshape(-1, 7)
+        gt_boxes = info['annos']['gt_boxes_lidar']
         gt_names = info['annos']['gt_names']
-        input_dict_bgS_fgS = {
+        input_dict = {
             'points': points,
             'gt_boxes':gt_boxes,
             'gt_names':gt_names,
@@ -285,37 +269,26 @@ class FourSeasonDataset(DatasetTemplate):
             'image_shape': 0
         }
 
-        data_dict_bgS_fgS = self.prepare_data(data_dict=input_dict_bgS_fgS)
-        # input_dict_bgS_fgT = copy.deepcopy(input_dict_bgS_fgS)
-        data_dict_bgS_fgS.pop('num_points_in_gt', None)
+        input_dict_modulated = copy.deepcopy(input_dict)
         ###################################################################################
         if self.training:
-            # boxes_T = np.concatenate((gt_boxes_T, gt_boxes_T_noisy), axis=0)
-            # pts_T = self.get_lidar(info_T0['frame_id'], Target= True)
-            # pts_T = box_utils.remove_points_in_boxes3d(pts_T, boxes_T)
-            # input_dict_bgT_fgS = {
-            #     'points': pts_T,
-            #     'gt_boxes':np.zeros((0, 7)),
-            #     'gt_names':np.zeros((0, )).astype(str),
-            #     'frame_id': info_T0['frame_id'],
-            #     'calib': None,
-            #     'image_shape': 0
-            # }
-            # data_dict_bgT_fgS = self.prepare_data(data_dict=input_dict_bgT_fgS)
-            # input_dict_bgS_fgT['src_modulated'] = True
-            # data_dict_bgS_fgT = self.prepare_data(data_dict=input_dict_bgS_fgT)
-            # data_dict_bgS_fgT.pop('num_points_in_gt', None)
-            # data_dict_bgS_fgT.pop('src_modulated', None)
-            # return [data_dict_bgS_fgS, data_dict_bgS_fgT]
+            input_dict_modulated['src_modulated'] = True
+            data_dict_src_m = self.prepare_data(data_dict=input_dict_modulated)
+            data_dict_src_m['metadata'] = info.get('metadata', info['frame_id'])
+            data_dict_src_m.pop('num_points_in_gt', None)
+            data_dict_src_m.pop('src_modulated', None)
+            # return [data_dict, data_dict_src_m]
             if points_T.shape[0] != 0:
-                data_dict_bgT_fgT = self.prepare_data(data_dict=input_dict_bgT_fgT, Target= True)
-                return [data_dict_bgS_fgS , data_dict_bgT_fgT]
+                data_dict_T = self.prepare_data(data_dict=input_dict_T, Target= True)
+                data_dict_T['metadata'] = info_T0['metadata']
+                return [data_dict, data_dict_src_m , data_dict_T]
+                # return [data_dict , data_dict_T]
             else:
-                return [data_dict_bgS_fgS]
+                return [data_dict, data_dict_src_m]
                 # return [data_dict]
 
         else:
-            return [data_dict_bgS_fgS]
+            return [data_dict]
         ###################################################################################
 
     
@@ -450,16 +423,41 @@ class FourSeasonDataset(DatasetTemplate):
         print('---------------The fourseason sample interval is %d, total sequecnes is %d-----------------'
               % (sampled_interval, len(self.labels_list)))
 
-        process_single_sequence = partial(
-            fourseason_utils.process_single_sequence,
+        process_single_sequence_DALI = partial(
+            fourseason_utils.process_single_sequence_DALI,
             save_path=save_path, sampled_interval=sampled_interval, has_label=has_label, update_info_only=update_info_only
         )
         labels_list_sampled = self.labels_list[::sampled_interval]
         labels_list_sampled = [Path(path) for path in labels_list_sampled]
         with multiprocessing.Pool(num_workers) as p:
-            sequence_infos = list(tqdm(p.imap(process_single_sequence, labels_list_sampled),
+            sequence_infos = list(tqdm(p.imap(process_single_sequence_DALI, labels_list_sampled),
                                        total=len(labels_list_sampled)))
-        # process_single_sequence(labels_list_sampled[23])
+        # sequence_infos = process_single_sequence_DALI(labels_list_sampled[23])
+        for info in tqdm(sequence_infos, desc="Processing sequences"):
+            points = self.get_lidar(info['point_cloud']['lidar_sequence'])
+
+            names = info['annos']['gt_names']
+            gt_boxes = info['annos']['gt_boxes_lidar']
+
+            num_obj = gt_boxes.shape[0]
+            if num_obj == 0:
+                continue
+
+
+            box_idxs_of_pts = roiaware_pool3d_utils.points_in_boxes_gpu(
+                torch.from_numpy(points[:, 0:3]).unsqueeze(dim=0).float().cuda(),
+                torch.from_numpy(gt_boxes[:, 0:7]).unsqueeze(dim=0).float().cuda()
+            ).long().squeeze(dim=0).cpu().numpy()
+            gt_pts = []
+            for i in range(num_obj):
+                gt_points = points[box_idxs_of_pts == i]
+                if gt_points.shape[0]>= 5 :
+                    gt_pts.append(True)
+                else:
+                    gt_pts.append(False)
+            gt_pts = np.array(gt_pts)
+            info['annos']['gt_names'] = names[gt_pts]
+            info['annos']['gt_boxes_lidar'] = gt_boxes[gt_pts]
         return sequence_infos
 
 
@@ -468,8 +466,8 @@ class FourSeasonDataset(DatasetTemplate):
 
     
 
-        database_save_path = save_path / ('%s_gt_database_%s_sampled_%d' % (processed_data_tag, split, sampled_interval))
-        db_info_save_path = save_path / ('%s_dbinfos_%s_sampled_%d.pkl' % (processed_data_tag, split, sampled_interval))
+        database_save_path = save_path / ('%s_DALI_gt_database_%s_sampled_%d' % (processed_data_tag, split, sampled_interval))
+        db_info_save_path = save_path / ('%s_DALI_dbinfos_%s_sampled_%d.pkl' % (processed_data_tag, split, sampled_interval))
         # db_data_save_path = save_path / ('%s_gt_database_%s_sampled_%d_global.npy' % (processed_data_tag, split, sampled_interval))
 
         database_save_path.mkdir(parents=True, exist_ok=True)
@@ -480,13 +478,11 @@ class FourSeasonDataset(DatasetTemplate):
         point_offset_cnt = 0
         for k in tqdm(range(0, len(infos), sampled_interval)):
             info = infos[k]
-            pc_info = info['point_cloud']
-            sequence_name = pc_info['lidar_sequence']
+            sequence_name = info['point_cloud']['lidar_sequence']
+            # sequence_name = pc_info['lidar_sequence']
             points = self.get_lidar(sequence_name)
-
-            annos = info['annos']
-            names = annos['gt_names']
-            gt_boxes = annos['gt_boxes_lidar']
+            names = info['annos']['gt_names']
+            gt_boxes = info['annos']['gt_boxes_lidar']
 
             num_obj = gt_boxes.shape[0]
             if num_obj == 0:
@@ -502,7 +498,7 @@ class FourSeasonDataset(DatasetTemplate):
                 filename = '%s_%s_%d.bin' % (sequence_name, names[i], i)
                 filepath = database_save_path / filename
                 gt_points = points[box_idxs_of_pts == i]
-                if gt_points.shape[0]<3:
+                if gt_points.shape[0]<5:
                     continue
                 gt_points[:, 0:3] -= gt_boxes[i, 0:3]
 
@@ -542,11 +538,10 @@ def create_fs_infos(dataset_cfg, class_names, data_path, save_path,
     train_split, val_split = 'train', 'val'
 
     train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
-    val_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, val_split))
+    # val_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, val_split))
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     print('---------------Start to generate data infos---------------')
-
     dataset.set_split(train_split)
     fs_infos_train = dataset.get_infos(
         raw_data_path=data_path / raw_data_tag,
@@ -557,21 +552,21 @@ def create_fs_infos(dataset_cfg, class_names, data_path, save_path,
         pickle.dump(fs_infos_train, f)
     print('----------------fourseason info train file is saved to %s----------------' % train_filename)
 
-    dataset.set_split(val_split)
-    fs_infos_val = dataset.get_infos(
-        raw_data_path=data_path / raw_data_tag,
-        save_path=save_path / processed_data_tag, num_workers=workers, has_label=True,
-        sampled_interval=1, update_info_only=update_info_only
-    )
-    with open(val_filename, 'wb') as f:
-        pickle.dump(fs_infos_val, f)
-    print('----------------fourseason info val file is saved to %s----------------' % val_filename)
+    # dataset.set_split(val_split)
+    # fs_infos_val = dataset.get_infos(
+    #     raw_data_path=data_path / raw_data_tag,
+    #     save_path=save_path / processed_data_tag, num_workers=workers, has_label=True,
+    #     sampled_interval=1, update_info_only=update_info_only
+    # )
+    # with open(val_filename, 'wb') as f:
+    #     pickle.dump(fs_infos_val, f)
+    # print('----------------fourseason info val file is saved to %s----------------' % val_filename)
 
     if update_info_only:
-        return
+        returns
 
     print('---------------Start create groundtruth database for data augmentation---------------')
-    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     dataset.set_split(train_split)
     dataset.create_groundtruth_database(
         info_path=train_filename, save_path=save_path, split='train', sampled_interval=1,
@@ -680,7 +675,8 @@ def create_fs_gt_database(
     )
 
     train_split = 'train'
-    train_filename = save_path / ('%s_infos_%s.pkl' % (processed_data_tag, train_split))
+    # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow/fs_infos_train.pkl'
+    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/fs_DALI_infos_train.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
@@ -698,20 +694,21 @@ if __name__ == '__main__':
     from easydict import EasyDict
 
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/alyaqou1/det3d/tools/cfgs/dataset_configs/fourseason_dataset.yaml', help='specify the config of dataset')
+    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/tools/cfgs/dataset_configs/fourseason_dataset_DALI.yaml', help='specify the config of dataset')
     parser.add_argument('--func', type=str, default='create_fs_infos', help='')
-    parser.add_argument('--processed_data_tag', type=str, default='fs', help='')
+    parser.add_argument('--processed_data_tag', type=str, default='fs_DALI', help='')
     parser.add_argument('--update_info_only', action='store_true', default=False, help='')
     parser.add_argument('--use_parallel', action='store_true', default=False, help='')
     parser.add_argument('--wo_crop_gt_with_tail', action='store_true', default=False, help='')
-    parser.add_argument('--data_folder', type=str, default='/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced', help='specify the folder of dataset')
+    parser.add_argument('--data_folder', type=str, default='', help='specify the folder of dataset')
 
     args = parser.parse_args()
 
     # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
 
     # ROOT_DIR = Path('data/fourseason/ImageSets/2022_rain_5min_balanced')
-    ROOT_DIR = Path('/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced')
+    ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/')
+    # ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow')
     # ROOT_DIR = Path('data/fourseason/ImageSets/')
 
     if args.func == 'filter_fs_infos':
@@ -744,8 +741,8 @@ if __name__ == '__main__':
         create_fs_gt_database(
             dataset_cfg=dataset_cfg,
             class_names=used_classes_fs,
-            data_path=ROOT_DIR / 'data' / 'fourseason',
-            save_path=ROOT_DIR / 'data' / 'fourseason',
+            data_path=ROOT_DIR,
+            save_path=ROOT_DIR,
             processed_data_tag=args.processed_data_tag,
             use_parallel=args.use_parallel, 
             crop_gt_with_tail=not args.wo_crop_gt_with_tail

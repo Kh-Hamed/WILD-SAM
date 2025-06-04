@@ -55,3 +55,34 @@ def process_single_sequence(sequence_file, save_path, sampled_interval, has_labe
         info['annos'] = annotations
 
     return info
+
+
+def process_single_sequence_DALI(sequence_file, save_path, sampled_interval, has_label=True, use_two_returns=True, update_info_only=False):
+    # parent_dir = os.path.basename(os.path.dirname(sequence_file))  # Gets 'Batch2'
+    file_name = os.path.splitext(os.path.basename(sequence_file))[0]                  # Gets '1692389221417853952_label3d.yaml'
+    # sequence_name = os.path.join(parent_dir, file_name)
+    # sequence_name = os.path.join(sequence_file.parts[-3], sequence_file.parts[-2], sequence_file.parts[-1][:-13])
+    class_map = {
+        1: 'Car',
+        2: 'Pedestrian',
+        3: 'Bike'
+    }
+    # data_labels = yaml.safe_load(open(sequence_file))
+    data_labels = np.load(sequence_file)
+    gt_names = np.array([class_map[int(cls)] for cls in data_labels[:, 7]])
+    gt_boxes = data_labels[:, :7]  # Assuming the first 7 columns are the box parameters
+    
+
+    info = {}
+    info['label'] = file_name
+    pc_info = {'num_features': 3, 'lidar_sequence': file_name}
+    # pc_info = {'num_features': 3, 'lidar_sequence': sequence_name}
+    info['point_cloud'] = pc_info
+
+    if has_label:
+        annotations = {}
+        annotations['gt_boxes_lidar'] = gt_boxes
+        annotations['gt_names'] = gt_names
+        info['annos'] = annotations
+
+    return info

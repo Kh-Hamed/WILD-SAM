@@ -63,13 +63,15 @@ class DataBaseSampler(object):
         ##############################################################################################
         # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
         # self.db_info_path_T = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced/'
-        self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/'
+        # self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/'
+        self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/'
         self.db_infos_T = {}
         for class_name in class_names:
             self.db_infos_T[class_name] = []
         # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_1.pkl'
         # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
-        db_info_T = self.db_info_path_T + 'fs_LISA_dbinfos_train_sampled_1.pkl'
+        # db_info_T = self.db_info_path_T + 'fs_LISA_dbinfos_train_sampled_1.pkl'
+        db_info_T = self.db_info_path_T + 'fs_DALI_DALI_dbinfos_train_sampled_1.pkl'
         with open(str(db_info_T), 'rb') as f:
             infos_T = pickle.load(f)
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]

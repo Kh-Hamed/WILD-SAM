@@ -20,3 +20,4 @@ version.py
 *.davinci
 *.json
 *.png
+*.npy
