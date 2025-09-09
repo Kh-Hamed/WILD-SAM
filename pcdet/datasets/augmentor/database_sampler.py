@@ -61,11 +61,11 @@ class DataBaseSampler(object):
                 'indices': np.arange(len(self.db_infos[class_name]))
             }
         ##############################################################################################
-        self.db_info_path_T = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/'
+        self.db_info_path_T = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/'
         self.db_infos_T = {}
         for class_name in class_names:
             self.db_infos_T[class_name] = []
-        db_info_T = self.db_info_path_T + 'fs_DALI_DALI_dbinfos_train_sampled_1.pkl'
+        db_info_T = self.db_info_path_T + 'fs_LISA_dbinfos_train_sampled_1.pkl'
         with open(str(db_info_T), 'rb') as f:
             infos_T = pickle.load(f)
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]

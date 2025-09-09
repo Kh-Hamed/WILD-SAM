@@ -46,7 +46,7 @@ def process_single_sequence(sequence_file, save_path, sampled_interval, has_labe
 
     info = {}
     info['label'] = sequence_name
-    pc_info = {'num_features': 3, 'lidar_sequence': data_labels['index']}
+    pc_info = {'num_features': 4, 'lidar_sequence': data_labels['index']}
     # pc_info = {'num_features': 3, 'lidar_sequence': sequence_name}
     info['point_cloud'] = pc_info
 

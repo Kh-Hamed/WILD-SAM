@@ -53,7 +53,7 @@ class FourSeasonDataset(DatasetTemplate):
 
         ###############################################################################################
         self.infos_DALI = []
-        info_path_DALI = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/fs_DALI_infos_train.pkl'
+        info_path_DALI = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/fs_infos_train.pkl'
 
 
         if Path(info_path_DALI).exists(): 
@@ -120,9 +120,9 @@ class FourSeasonDataset(DatasetTemplate):
             pointcloud = pc[:, 0:4]
 
         elif Target:
-            lidar_file = Path(self.root_path_T) / Path(sequence_name + '.npy' )
-            points_all = np.load(lidar_file)
-            pc = points_all.astype(np.float32)     
+            lidar_file = Path(self.root_path_T) / Path(sequence_name + '_oust.pcd' )
+            points_all = PointCloud.from_path(lidar_file)
+            pc = points_all.numpy().astype(np.float32)      
             # pc[:, 3] = np.log10(pc[:, 3]  + 1)
             pointcloud = pc[:, 0:4]
         
