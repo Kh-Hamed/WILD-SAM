@@ -61,130 +61,16 @@ class DataBaseSampler(object):
                 'indices': np.arange(len(self.db_infos[class_name]))
             }
         ##############################################################################################
-        # self.db_info_path_T = '/egr/research-canvas/detection3d_datasets/waymo_v1.2_DA/raw_data/'
-        # self.db_info_path_T = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced/'
-        # self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/'
-        self.db_info_path_T = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/'
+        self.db_info_path_T = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/'
         self.db_infos_T = {}
         for class_name in class_names:
             self.db_infos_T[class_name] = []
-        # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_waymo_dbinfos_train_sampled_1.pkl'
-        # db_info_T = self.db_info_path_T + 'waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
-        # db_info_T = self.db_info_path_T + 'fs_LISA_dbinfos_train_sampled_1.pkl'
         db_info_T = self.db_info_path_T + 'fs_DALI_DALI_dbinfos_train_sampled_1.pkl'
         with open(str(db_info_T), 'rb') as f:
             infos_T = pickle.load(f)
             [self.db_infos_T[cur_class].extend(infos_T[cur_class]) for cur_class in class_names]
 
-        self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points'])
-        # self.db_infos_T = self.filter_by_max_points(self.db_infos_T, 100)
-        # ##################################################################################################################
-        # # Define root paths for source and target datasets
-        # root_path_src = '/space/userfiles/alyaqou1/det3d/data/fourseason/ImageSets/2023_late_summer_5min_balanced'
-        # # root_path_trgt_base = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/pv-rcnn++/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced'
-        # root_path_trgt_base = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/data/fourseason/voxel_rcnn/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced'
-
-        # # Define paths for source and target data
-        # path_src = root_path_src + '/fs_dbinfos_train_sampled_1.pkl'
-        # path_pseudo_trgt_0 = root_path_trgt_base + '/pseudo_label_iteration_0/fs_pseudo_dbinfos_train_sampled_1.pkl'
-        # # path_pseudo_trgt_1 = root_path_trgt_base + '/pseudo_label_iteration_2/waymo_processed_data_v0_5_0_pseudo_waymo_dbinfos_train_sampled_1.pkl'
-
-        # # Load the data
-        # data_src = self.load_pickle_file(path_src)
-        # data_pseudo_trgt_0 = self.load_pickle_file(path_pseudo_trgt_0)
-        # # data_pseudo_trgt_1 = self.load_pickle_file(path_pseudo_trgt_1)
-        # from concurrent.futures import ThreadPoolExecutor
-        # self.intensity_classes_trgt_0 = {}; self.intensity_classes_trgt_1 = {}; self.intensity_classes_src = {}
-        # self.intensity_counts_target_0 = {}; self.intensity_counts_target_1 = {}; self.intensity_counts_source = {}
-        # self.intensity_unique_vals_target_0 = {}; self.intensity_unique_vals_target_1 = {}; self.intensity_unique_vals_source = {}
-        # self.range = 200
-        # skip = 5
-        # for cls in class_names:
-        #     # Process source data
-        #     src_point_paths = [info['path'] for info in data_src.get(cls, [])][::skip]
-        #     src_point_boxes = [info['box3d_lidar'].reshape(1, -1) for info in data_src.get(cls, [])][::skip]
-        #     src_boxes = np.concatenate(src_point_boxes, axis=0)
-        #     src_boxes_distance = np.sqrt(src_boxes[:, 0] ** 2 + src_boxes[:, 1] ** 2 + src_boxes[:, 2] ** 2)
-        #     mask_src = src_boxes_distance < self.range
-        #     src_close_indices = np.where(mask_src)[0]
-        #     src_far_indices = np.where(~mask_src)[0]
-        #     src_point_paths_close = [src_point_paths[i] for i in src_close_indices]
-        #     src_point_paths_far = [src_point_paths[i] for i in src_far_indices]
-
-        #     # Process target data for iteration 0
-        #     pseudo_trgt_point_paths_0 = [info['path'] for info in data_pseudo_trgt_0.get(cls, [])][::skip]
-        #     pseudo_trgt_point_boxes_0 = [info['box3d_lidar'].reshape(1, -1) for info in data_pseudo_trgt_0.get(cls, [])][::skip]
-        #     pseudo_trgt_boxes_0 = np.concatenate(pseudo_trgt_point_boxes_0, axis=0)
-        #     pseudo_trgt_boxes_distance_0 = np.sqrt(pseudo_trgt_boxes_0[:, 0] ** 2 + pseudo_trgt_boxes_0[:, 1] ** 2 + pseudo_trgt_boxes_0[:, 2] ** 2)
-        #     mask_trgt_0 = pseudo_trgt_boxes_distance_0 < self.range
-        #     pseudo_trgt_close_indices_0 = np.where(mask_trgt_0)[0]
-        #     pseudo_trgt_far_indices_0 = np.where(~mask_trgt_0)[0]
-        #     pseudo_trgt_point_paths_close_0 = [pseudo_trgt_point_paths_0[i] for i in pseudo_trgt_close_indices_0]
-        #     pseudo_trgt_point_paths_far_0 = [pseudo_trgt_point_paths_0[i] for i in pseudo_trgt_far_indices_0]
-
-        #     # Process target data for iteration 1
-        #     # pseudo_trgt_point_paths_1 = [info['path'] for info in data_pseudo_trgt_1.get(cls, [])][::skip]
-        #     # pseudo_trgt_point_boxes_1 = [info['box3d_lidar'].reshape(1, -1) for info in data_pseudo_trgt_1.get(cls, [])][::skip]
-        #     # pseudo_trgt_boxes_1 = np.concatenate(pseudo_trgt_point_boxes_1, axis=0)
-        #     # pseudo_trgt_boxes_distance_1 = np.sqrt(pseudo_trgt_boxes_1[:, 0] ** 2 + pseudo_trgt_boxes_1[:, 1] ** 2 + pseudo_trgt_boxes_1[:, 2] ** 2)
-        #     # mask_trgt_1 = pseudo_trgt_boxes_distance_1 < self.range
-        #     # pseudo_trgt_close_indices_1 = np.where(mask_trgt_1)[0]
-        #     # pseudo_trgt_far_indices_1 = np.where(~mask_trgt_1)[0]
-        #     # pseudo_trgt_point_paths_close_1 = [pseudo_trgt_point_paths_1[i] for i in pseudo_trgt_close_indices_1]
-        #     # pseudo_trgt_point_paths_far_1 = [pseudo_trgt_point_paths_1[i] for i in pseudo_trgt_far_indices_1]
-
-
-        #     with ThreadPoolExecutor() as executor:
-        #         # Process intensity for source data
-        #         results_src_intensity_close = list(executor.map(self.process_file, src_point_paths_close, [root_path_src] * len(src_point_paths_close), [3] * len(src_point_paths_close)))
-        #         results_src_intensity_far = list(executor.map(self.process_file, src_point_paths_far, [root_path_src] * len(src_point_paths_far), [3] * len(src_point_paths_far)))
-
-        #         # Process intensity for target data iteration 0
-        #         results_pseudo_trgt_intensity_close_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_close_0), [3] * len(pseudo_trgt_point_paths_close_0)))
-        #         results_pseudo_trgt_intensity_far_0 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_0, [root_path_trgt_base + '/pseudo_label_iteration_0'] * len(pseudo_trgt_point_paths_far_0), [3] * len(pseudo_trgt_point_paths_far_0)))
-
-        #         # Process intensity for target data iteration 1
-        #         # results_pseudo_trgt_intensity_close_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_close_1, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_close_1), [3] * len(pseudo_trgt_point_paths_close_1)))
-        #         # results_pseudo_trgt_intensity_far_1 = list(executor.map(self.process_file, pseudo_trgt_point_paths_far_1, [root_path_trgt_base + '/pseudo_label_iteration_2'] * len(pseudo_trgt_point_paths_far_1), [3] * len(pseudo_trgt_point_paths_far_1)))
-
-        #     # Define common variable names
-        #     cls_close, cls_far = cls + '_close', cls + '_far'
-
-        #     # Combine and sort intensity data
-        #     self.intensity_classes_src[cls_close] = np.sort(np.concatenate(results_src_intensity_close))
-        #     if results_src_intensity_far:
-        #         self.intensity_classes_src[cls_far] = np.sort(np.concatenate(results_src_intensity_far))
-        #     else:
-        #         self.intensity_classes_src[cls_far] = np.array([]) 
-        #     self.intensity_classes_trgt_0[cls_close] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close_0))
-        #     if results_pseudo_trgt_intensity_far_0: 
-        #         self.intensity_classes_trgt_0[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_0))
-        #     else:
-        #         self.intensity_classes_trgt_0[cls_far] = np.array([])
-        #     # self.intensity_classes_trgt_1[cls_close] = np.sort(np.concatenate(results_pseudo_trgt_intensity_close_1))
-        #     # self.intensity_classes_trgt_1[cls_far] = np.sort(np.concatenate(results_pseudo_trgt_intensity_far_1))
-
-        #     # Get unique intensity values and counts
-        #     self.intensity_unique_vals_source[cls_close], self.intensity_counts_source[cls_close] = np.unique(self.intensity_classes_src[cls_close], return_counts=True)
-        #     self.intensity_unique_vals_source[cls_far], self.intensity_counts_source[cls_far] = np.unique(self.intensity_classes_src[cls_far], return_counts=True)
-        #     self.intensity_unique_vals_target_0[cls_close], self.intensity_counts_target_0[cls_close] = np.unique(self.intensity_classes_trgt_0[cls_close], return_counts=True)
-        #     self.intensity_unique_vals_target_0[cls_far], self.intensity_counts_target_0[cls_far] = np.unique(self.intensity_classes_trgt_0[cls_far], return_counts=True)
-        #     # self.intensity_unique_vals_target_1[cls_close], self.intensity_counts_target_1[cls_close] = np.unique(self.intensity_classes_trgt_1[cls_close], return_counts=True)
-        #     # self.intensity_unique_vals_target_1[cls_far], self.intensity_counts_target_1[cls_far] = np.unique(self.intensity_classes_trgt_1[cls_far], return_counts=True)
-
-        # # self.db_infos_T = self.filter_by_min_score(self.db_infos_T, 0.60)
-        # weight = {'Car': 0.70, 'Pedestrian': 0.90, 'Bike': 0.90}
-        # for cur_class in class_names:
-        #     info_T_cls = self.db_infos_T[cur_class]
-        #     summer_points = [info_T['num_points_in_gt'] for info_T in info_T_cls]
-        #     sorted_summer_points, sorted_indices = np.sort(summer_points), np.argsort(summer_points)
-        #     mn = np.mean(sorted_summer_points)
-        #     std = np.std(sorted_summer_points)
-        #     high_th = np.floor(mn  +  3 * std)
-        #     summer_weights = np.interp(sorted_summer_points, [5, high_th], [weight[cur_class], 1.0])
-        #     num_points_in_gt_T = np.maximum(np.floor(sorted_summer_points * summer_weights), 5).astype(int)
-        #     for i, ind in enumerate(sorted_indices):
-        #         info_T_cls[ind]['num_points_in_gt_T']  = num_points_in_gt_T[i]   
+        self.db_infos_T = self.filter_by_min_points(self.db_infos_T, sampler_cfg.PREPARE['filter_by_min_points']) 
 
 
         self.sample_groups_T = {}
@@ -224,29 +110,6 @@ class DataBaseSampler(object):
             self.logger.info('GT database has been removed from shared memory')
 
     ################################################################################################
-
-
-    def cdf_match_batch(self, source_samples, cls, box):
-        box = box.reshape(1, -1)
-        box_distance = np.sqrt(box[0, 0] ** 2  + box[0, 1] ** 2 + box[0, 2] ** 2)
-        dist = 'close' if box_distance < self.range else 'far'
-        counts_source = self.intensity_counts_source[cls + '_' + dist]
-        unique_vals_source = self.intensity_unique_vals_source[cls + '_' + dist]
-        counts_target_0 = self.intensity_counts_target_0[cls + '_' + dist]
-        unique_vals_target_0 = self.intensity_unique_vals_target_0[cls + '_' + dist]   
-        # counts_target_1 = self.intensity_counts_target_1[cls + '_' + dist]
-        # unique_vals_target_1 = self.intensity_unique_vals_target_1[cls + '_' + dist]  
-
-        cdf_vals_source = np.cumsum(counts_source) / counts_source.sum()
-        source_cdf_values = np.interp(source_samples, unique_vals_source, cdf_vals_source)
-
-        # if cls == 'Vehicle':
-        cdf_vals_target_0 = np.cumsum(counts_target_0) / counts_target_0.sum()
-        target_samples = np.interp(source_cdf_values, cdf_vals_target_0, unique_vals_target_0)    
-        # else:
-        #     cdf_vals_target_1 = np.cumsum(counts_target_1) / counts_target_1.sum()
-        #     target_samples = np.interp(source_cdf_values, cdf_vals_target_1, unique_vals_target_1)   
-        return target_samples.astype(np.float32).reshape(-1, )
     
 
     def process_file(self, lidar_file, root_path, index):
@@ -662,17 +525,6 @@ class DataBaseSampler(object):
             else:
                 obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
                 
-            # if Target is True:
-            #     # option = np.random.choice(["intensity", "sparsity"], p=[0.5, 0.5])
-            #     # if option in ["sparsity"]:
-            #     #     msk = np.random.choice(obj_points.shape[0], size=info['num_points_in_gt_T'], replace=False)
-            #     #     obj_points = obj_points[msk]
-
-            #     # if option in ["intensity"]:
-            #     obj_points[:, 3] = self.cdf_match_batch(
-            #         obj_points[:, 3].reshape(-1,),
-            #         cls=info['name'],
-            #         box=info['box3d_lidar'])
             #################################################################################
 
             if self.sampler_cfg.get('USE_ROAD_PLANE', False):
@@ -784,28 +636,5 @@ class DataBaseSampler(object):
             )
 
         data_dict.pop('gt_boxes_mask')
-        ########################################################################
-        if data_dict.get('src_modulated', False) is not False:
-            
-            from pcdet.ops.roiaware_pool3d.roiaware_pool3d_utils import points_in_boxes_cpu
-            points_bg = box_utils.remove_points_in_boxes3d(data_dict['points'], data_dict['gt_boxes'])
-            points_fg_modulated = []
-            points = np.copy(data_dict['points'])
-            
-            for index, name in enumerate(data_dict['gt_names']):
-                point_masks = points_in_boxes_cpu(points[:, 0:3], data_dict['gt_boxes'][index,:].reshape(1, -1))
-                inside_box_mask = point_masks.sum(axis=0) > 0
-                point_fg = points[inside_box_mask]
-                if name in self.class_names:
-                    if point_fg.shape[0] != 0:
-                        point_fg[:, 3] = self.cdf_match_batch(
-                            point_fg[:, 3].reshape(-1,),
-                            cls=name,
-                            box=data_dict['gt_boxes'][index,:]
-                        )  
-                points_fg_modulated.append(point_fg)
-
-            points_fg = np.concatenate(points_fg_modulated, axis=0)         
-            data_dict['points'] = np.concatenate([points_fg, points_bg], axis=0)
         ########################################################################
         return data_dict

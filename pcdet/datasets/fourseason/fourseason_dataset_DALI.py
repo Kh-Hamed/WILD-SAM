@@ -110,14 +110,7 @@ class FourSeasonDataset(DatasetTemplate):
             lidar_file = Path(self.path_lidar) / Path(sequence_name + '.npy' )
             points_all = np.load(lidar_file)
             pc = points_all.astype(np.float32)     
-            pc[:, 3] = np.log10(pc[:, 3]  + 1)
-            pointcloud = pc[:, 0:4]
-
-        elif Target:
-            lidar_file = Path(self.root_path_T) / Path(sequence_name + '.npy' )
-            points_all = np.load(lidar_file)
-            pc = points_all.astype(np.float32)     
-            pc[:, 3] = np.log10(pc[:, 3]  + 1)
+            # pc[:, 3] = np.log10(pc[:, 3]  + 1)
             pointcloud = pc[:, 0:4]
         return pointcloud
 
@@ -563,7 +556,7 @@ def create_fs_infos(dataset_cfg, class_names, data_path, save_path,
     # print('----------------fourseason info val file is saved to %s----------------' % val_filename)
 
     if update_info_only:
-        returns
+        return 0
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -676,7 +669,7 @@ def create_fs_gt_database(
 
     train_split = 'train'
     # train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow/fs_infos_train.pkl'
-    train_filename = '/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/fs_DALI_infos_train.pkl'
+    train_filename = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/fs_DALI_infos_train.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
@@ -694,7 +687,7 @@ if __name__ == '__main__':
     from easydict import EasyDict
 
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/tools/cfgs/dataset_configs/fourseason_dataset_DALI.yaml', help='specify the config of dataset')
+    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/SAM_IV_conference/tools/cfgs/dataset_configs/fourseason_dataset_DALI.yaml', help='specify the config of dataset')
     parser.add_argument('--func', type=str, default='create_fs_infos', help='')
     parser.add_argument('--processed_data_tag', type=str, default='fs_DALI', help='')
     parser.add_argument('--update_info_only', action='store_true', default=False, help='')
@@ -704,10 +697,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
-
     # ROOT_DIR = Path('data/fourseason/ImageSets/2022_rain_5min_balanced')
-    ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/DALI/DALI_simulation_snow/RC_PPCG/')
+    ROOT_DIR = Path('/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/')
     # ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow')
     # ROOT_DIR = Path('data/fourseason/ImageSets/')
 

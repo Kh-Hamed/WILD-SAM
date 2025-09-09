@@ -1,7 +1,7 @@
 CLASS_NAMES: ['Car', 'Pedestrian', 'Bike']
 
 DATA_CONFIG:
-    _BASE_CONFIG_: /space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/tools/cfgs/dataset_configs/fourseason_dataset.yaml
+    _BASE_CONFIG_: /space/userfiles/khatouna/SAM_IV_conference/tools/cfgs/dataset_configs/fourseason_dataset.yaml
     # _BASE_CONFIG_: /home/hamed/remote/tools/cfgs/dataset_configs/fourseason_dataset.yaml
 
      

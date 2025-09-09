@@ -75,7 +75,7 @@ def process_single_sequence_DALI(sequence_file, save_path, sampled_interval, has
 
     info = {}
     info['label'] = file_name
-    pc_info = {'num_features': 3, 'lidar_sequence': file_name}
+    pc_info = {'num_features': 4, 'lidar_sequence': file_name}
     # pc_info = {'num_features': 3, 'lidar_sequence': sequence_name}
     info['point_cloud'] = pc_info
 
