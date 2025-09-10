@@ -20,7 +20,8 @@ class DatasetTemplate(torch_data.Dataset):
         self.logger = logger
         self.root_path = root_path if root_path is not None else Path(self.dataset_cfg.DATA_PATH)
         ##############################################################################################
-        self.root_path_T = Path(self.dataset_cfg.DATA_PATH_T)
+        self.root_path_DALI = Path(self.dataset_cfg.DATA_PATH_DALI)
+        self.root_path_LISA = Path(self.dataset_cfg.DATA_PATH_LISA)
         ##############################################################################################
         self.logger = logger
         if self.dataset_cfg is None or class_names is None:
@@ -158,7 +159,7 @@ class DatasetTemplate(torch_data.Dataset):
         data_dict['lidar_aug_matrix'] = lidar_aug_matrix
         return data_dict
 
-    def prepare_data(self, data_dict, Target= False):
+    def prepare_data(self, data_dict, Target= None):
         """
         Args:
             data_dict:

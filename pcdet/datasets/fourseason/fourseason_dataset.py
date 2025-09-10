@@ -53,13 +53,23 @@ class FourSeasonDataset(DatasetTemplate):
 
         ###############################################################################################
         self.infos_DALI = []
-        info_path_DALI = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/fs_infos_train.pkl'
+        info_path_DALI = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/fs_DALI_infos_train.pkl'
 
 
         if Path(info_path_DALI).exists(): 
             with open(info_path_DALI, 'rb') as f:
                 info_DALI = pickle.load(f)
                 self.infos_DALI.extend(info_DALI)
+        ###############################################################################################
+        ###############################################################################################
+        self.infos_LISA = []
+        info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/fs_infos_train.pkl'
+
+
+        if Path(info_path_LISA).exists(): 
+            with open(info_path_LISA, 'rb') as f:
+                info_LISA = pickle.load(f)
+                self.infos_LISA.extend(info_LISA)
         ###############################################################################################
 
         
@@ -110,8 +120,8 @@ class FourSeasonDataset(DatasetTemplate):
         self.labels_list = [self.path_label+'/'+f+'_label3d.yaml' for f in names_with_Batch]
 
 
-    def get_lidar(self, sequence_name, Target = False,  path = None):
-        if path ==None and not Target:
+    def get_lidar(self, sequence_name, Target = None,  path = None):
+        if path ==None and Target is None:
             
             lidar_file = Path(self.path_lidar) / Path(sequence_name + '_oust.pcd' )
             points_all = PointCloud.from_path(lidar_file)
@@ -119,8 +129,15 @@ class FourSeasonDataset(DatasetTemplate):
             pc[:, 3] = np.log10(pc[:, 3]  + 1)
             pointcloud = pc[:, 0:4]
 
-        elif Target:
-            lidar_file = Path(self.root_path_T) / Path(sequence_name + '_oust.pcd' )
+        elif Target == 'DALI':
+            lidar_file = Path(self.root_path_DALI) / Path(sequence_name + '.npy' )
+            points_all = np.load(lidar_file)
+            pc = points_all.astype(np.float32)     
+            # pc[:, 3] = np.log10(pc[:, 3]  + 1)
+            pointcloud = pc[:, 0:4]
+
+        elif Target == 'LISA': 
+            lidar_file = Path(self.root_path_LISA) / Path(sequence_name + '_oust.pcd' )
             points_all = PointCloud.from_path(lidar_file)
             pc = points_all.numpy().astype(np.float32)      
             # pc[:, 3] = np.log10(pc[:, 3]  + 1)
@@ -145,19 +162,37 @@ class FourSeasonDataset(DatasetTemplate):
         info = copy.deepcopy(self.fs_infos[index])
 
         ######################################################################
-        points_T = np.zeros((0, ))
-        gt_boxes_T= np.zeros((0, 7))
-        gt_names_T = np.zeros((0, )).astype(str)
+        points_DALI = np.zeros((0, ))
+        gt_boxes_DALI = np.zeros((0, 7))
+        gt_names_DALI = np.zeros((0, )).astype(str)
         if index < len(self.infos_DALI) and (self.training):
             info_DALI = copy.deepcopy(self.infos_DALI[index])
-            points_T = self.get_lidar(info_DALI['point_cloud']['lidar_sequence'], Target= True)
-            gt_names_T = info_DALI['annos']['gt_names']
-            gt_boxes_T = info_DALI['annos']['gt_boxes_lidar'].reshape(-1, 7)[:, 0:7]
-            input_dict_bgT_fgT = {
-            'points': points_T,
-            'gt_boxes':gt_boxes_T,
-            'gt_names':gt_names_T,
+            points_DALI = self.get_lidar(info_DALI['point_cloud']['lidar_sequence'], Target= 'DALI')
+            gt_names_DALI = info_DALI['annos']['gt_names']
+            gt_boxes_DALI = info_DALI['annos']['gt_boxes_lidar'].reshape(-1, 7)[:, 0:7]
+            input_dict_bgT_fgT_DALI = {
+            'points': points_DALI,
+            'gt_boxes':gt_boxes_DALI,
+            'gt_names':gt_names_DALI,
             'frame_id': info_DALI['point_cloud']['lidar_sequence'],
+            'calib': None,
+            'image_shape': 0
+        }
+        ######################################################################
+        ######################################################################
+        points_LISA = np.zeros((0, ))
+        gt_boxes_LISA = np.zeros((0, 7))
+        gt_names_LISA = np.zeros((0, )).astype(str)
+        if index < len(self.infos_LISA) and (self.training):
+            info_LISA = copy.deepcopy(self.infos_LISA[index])
+            points_LISA = self.get_lidar(info_LISA['point_cloud']['lidar_sequence'], Target= 'LISA')
+            gt_names_LISA = info_LISA['annos']['gt_names']
+            gt_boxes_LISA = info_LISA['annos']['gt_boxes_lidar'].reshape(-1, 7)[:, 0:7]
+            input_dict_bgT_fgT_LISA = {
+            'points': points_LISA,
+            'gt_boxes':gt_boxes_LISA,
+            'gt_names':gt_names_LISA,
+            'frame_id': info_LISA['point_cloud']['lidar_sequence'],
             'calib': None,
             'image_shape': 0
         }
@@ -180,12 +215,17 @@ class FourSeasonDataset(DatasetTemplate):
         data_dict_bgS_fgS.pop('num_points_in_gt', None)
         ###################################################################################
         if self.training:
-            if points_T.shape[0] != 0:
-                data_dict_bgT_fgT = self.prepare_data(data_dict=input_dict_bgT_fgT, Target= True)
-                return [data_dict_bgS_fgS , data_dict_bgT_fgT]
-            else:
-                return [data_dict_bgS_fgS]
+            results = [data_dict_bgS_fgS]
 
+            if points_DALI.shape[0] != 0:
+                data_dict_bgT_fgT_DALI = self.prepare_data(data_dict=input_dict_bgT_fgT_DALI, Target='DALI')
+                results.append(data_dict_bgT_fgT_DALI)
+
+            if points_LISA.shape[0] != 0:
+                data_dict_bgT_fgT_LISA = self.prepare_data(data_dict=input_dict_bgT_fgT_LISA, Target='LISA')
+                results.append(data_dict_bgT_fgT_LISA)
+
+            return results
         else:
             return [data_dict_bgS_fgS]
         ###################################################################################

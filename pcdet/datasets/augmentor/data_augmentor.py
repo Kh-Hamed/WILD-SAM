@@ -53,7 +53,7 @@ class DataAugmentor(object):
     def __setstate__(self, d):
         self.__dict__.update(d)
 
-    def random_world_flip(self, data_dict=None, config=None, Target = False):
+    def random_world_flip(self, data_dict=None, config=None, Target = None):
         if data_dict is None:
             return partial(self.random_world_flip, config=config)
         gt_boxes, points = data_dict['gt_boxes'], data_dict['points']
@@ -74,7 +74,7 @@ class DataAugmentor(object):
         data_dict['points'] = points
         return data_dict
 
-    def random_world_rotation(self, data_dict=None, config=None, Target = False):
+    def random_world_rotation(self, data_dict=None, config=None, Target = None):
         if data_dict is None:
             return partial(self.random_world_rotation, config=config)
         rot_range = config['WORLD_ROT_ANGLE']
@@ -94,7 +94,7 @@ class DataAugmentor(object):
         data_dict['noise_rot'] = noise_rot
         return data_dict
 
-    def random_world_scaling(self, data_dict=None, config=None, Target = False):
+    def random_world_scaling(self, data_dict=None, config=None, Target = None):
         if data_dict is None:
             return partial(self.random_world_scaling, config=config)
         
@@ -287,7 +287,7 @@ class DataAugmentor(object):
         data_dict["camera_imgs"] = new_imgs
         return data_dict
 
-    def forward(self, data_dict, Target= False):
+    def forward(self, data_dict, Target= None):
         """
         Args:
             data_dict:
