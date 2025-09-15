@@ -1,22 +1,22 @@
 DATASET: 'FourSeasonDataset'
 
-DATA_PATH: '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow'
-PATH_LIDAR : '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/point_clouds'
+DATA_PATH: '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain'
+PATH_LIDAR : '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain/point_clouds'
 PATH_LABEL: '/egr/research-canvas/detection3d_datasets/four_seasons/imerit_check/new_filtered_label3d/minpts_5/2023_late_summer'
 
-DATA_PATH_T: '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/point_clouds'
+DATA_PATH_T: '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain/point_clouds'
 
 POINT_CLOUD_RANGE: [-75.2, -75.2, -4, 75.2, 75.2, 2]
 
 INFO_PATH: {
     'train': [fs_infos_train.pkl],
-    'test': [fs_infos_val.pkl],
+    'test': [fs_infos_train.pkl],
 }
 
 
 DATA_SPLIT: {
     'train': train,
-    'test': val
+    'test': train
 }
 
 

@@ -698,7 +698,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # ROOT_DIR = Path('data/fourseason/ImageSets/2022_rain_5min_balanced')
-    ROOT_DIR = Path('/space/userfiles/khatouna/SAM_IV_conference/data/DALI/RC_PPCG_2023_snow/')
+    ROOT_DIR = Path('/space/userfiles/khatouna/SAM_IV_conference/data/DALI/pv_rcnn_plusplus/RC_PPCG_2023_snow/')
     # ROOT_DIR = Path('/space/userfiles/khatouna/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/snow')
     # ROOT_DIR = Path('data/fourseason/ImageSets/')
 
