@@ -61,7 +61,7 @@ class DataBaseSampler(object):
                 'indices': np.arange(len(self.db_infos[class_name]))
             }
         ##############################################################################################
-        self.db_info_path_DALI = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/pv_rcnn_plusplus/RC_PPCG_2023_snow/'
+        self.db_info_path_DALI = '/space/userfiles/khatouna/SAM_IV_conference/data/DALI/voxel-rcnn/RC_PPCG_2022_rain/'
         self.db_infos_DALI = {}
         for class_name in class_names:
             self.db_infos_DALI[class_name] = []
@@ -90,7 +90,7 @@ class DataBaseSampler(object):
 
         ##############################################################################################
         ##############################################################################################
-        self.db_info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/'
+        self.db_info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain/'
         self.db_infos_LISA = {}
         for class_name in class_names:
             self.db_infos_LISA[class_name] = []
