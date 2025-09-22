@@ -63,7 +63,7 @@ class FourSeasonDataset(DatasetTemplate):
         ###############################################################################################
         ###############################################################################################
         self.infos_LISA = []
-        info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain/fs_infos_train.pkl'
+        info_path_LISA = '/space/userfiles/khatouna/WISDOM/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/fs_infos_train.pkl'
 
 
         if Path(info_path_LISA).exists(): 
@@ -140,7 +140,7 @@ class FourSeasonDataset(DatasetTemplate):
             lidar_file = Path(self.root_path_LISA) / Path(sequence_name + '_oust.pcd' )
             points_all = PointCloud.from_path(lidar_file)
             pc = points_all.numpy().astype(np.float32)      
-            # pc[:, 3] = np.log10(pc[:, 3]  + 1)
+            pc[:, 3] = np.log10(pc[:, 3]  + 1)
             pointcloud = pc[:, 0:4]
         
         return pointcloud
