@@ -90,7 +90,7 @@ class DataBaseSampler(object):
 
         ##############################################################################################
         ##############################################################################################
-        self.db_info_path_LISA = '/space/userfiles/khatouna/WISDOM/OpenPCDet_WOD_DA_FS/comparison/LISA/simulated_data/rain/'
+        self.db_info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain/'
         self.db_infos_LISA = {}
         for class_name in class_names:
             self.db_infos_LISA[class_name] = []
