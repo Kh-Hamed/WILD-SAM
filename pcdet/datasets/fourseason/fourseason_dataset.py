@@ -217,13 +217,13 @@ class FourSeasonDataset(DatasetTemplate):
         if self.training:
             results = [data_dict_bgS_fgS]
 
-            # if points_DALI.shape[0] != 0:
-            #     data_dict_bgT_fgT_DALI = self.prepare_data(data_dict=input_dict_bgT_fgT_DALI, Target='DALI')
-            #     results.append(data_dict_bgT_fgT_DALI)
+            if points_DALI.shape[0] != 0:
+                data_dict_bgT_fgT_DALI = self.prepare_data(data_dict=input_dict_bgT_fgT_DALI, Target='DALI')
+                results.append(data_dict_bgT_fgT_DALI)
 
-            if points_LISA.shape[0] != 0:
-                data_dict_bgT_fgT_LISA = self.prepare_data(data_dict=input_dict_bgT_fgT_LISA, Target='LISA')
-                results.append(data_dict_bgT_fgT_LISA)
+            # if points_LISA.shape[0] != 0:
+            #     data_dict_bgT_fgT_LISA = self.prepare_data(data_dict=input_dict_bgT_fgT_LISA, Target='LISA')
+            #     results.append(data_dict_bgT_fgT_LISA)
 
             return results
         else:
