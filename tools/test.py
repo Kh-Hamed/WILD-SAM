@@ -20,12 +20,12 @@ from pcdet.utils import common_utils
 
 def parse_config():
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/SAM_IV_conference/tools/cfgs/FS_models/pv_rcnn_plusplus.yaml', help='specify the config for training')
+    parser.add_argument('--cfg_file', type=str, default='/space/userfiles/khatouna/SAM_IV_conference/tools/cfgs/FS_models/voxel_rcnn.yaml', help='specify the config for training')
 
     parser.add_argument('--batch_size', type=int, default=None, required=False, help='batch size for training')
     parser.add_argument('--workers', type=int, default=4, help='number of workers for dataloader')
     parser.add_argument('--extra_tag', type=str, default='2023_late_summer_5min_balanced_to_2023_snow_5min_balanced', help='extra tag for this experiment')
-    parser.add_argument('--ckpt', type=str, default='/space/userfiles/khatouna/SAM_IV_conference/output/pv_rcnn_plusplus/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced/ckpt/checkpoint_epoch_80.pth', help='checkpoint to start from')
+    parser.add_argument('--ckpt', type=str, default='/space/userfiles/khatouna/SAM_IV_conference/output/voxel_rcnn/2023_late_summer_5min_balanced_to_2023_snow_5min_balanced/ckpt/checkpoint_epoch_80.pth', help='checkpoint to start from')
     parser.add_argument('--pretrained_model', type=str, default=None, help='pretrained_model')
     parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm'], default='none')
     parser.add_argument('--tcp_port', type=int, default=18888, help='tcp port for distrbuted training')
