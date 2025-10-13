@@ -668,7 +668,7 @@ def create_fs_gt_database(
     )
 
     train_split = 'train'
-    train_filename = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow/fs_infos_train.pkl'
+    train_filename = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow_10_mm_hr/fs_infos_train.pkl'
 
     print('---------------Start create groundtruth database for data augmentation---------------')
     dataset.set_split(train_split)
@@ -699,7 +699,7 @@ if __name__ == '__main__':
     # ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
 
     # ROOT_DIR = Path('data/fourseason/ImageSets/2022_rain_5min_balanced')
-    ROOT_DIR = Path('/space/userfiles/khatouna/SAM_IV_conference/data/LISA/rain')
+    ROOT_DIR = Path('/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow_10_mm_hr')
     # ROOT_DIR = Path('data/fourseason/ImageSets/')
 
     if args.func == 'filter_fs_infos':
