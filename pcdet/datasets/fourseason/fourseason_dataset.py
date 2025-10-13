@@ -63,7 +63,7 @@ class FourSeasonDataset(DatasetTemplate):
         ###############################################################################################
         ###############################################################################################
         self.infos_LISA = []
-        info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow_10_mm_hr/fs_infos_train.pkl'
+        info_path_LISA = '/space/userfiles/khatouna/SAM_IV_conference/data/LISA/snow_20_mm_hr/fs_infos_train.pkl'
 
 
         if Path(info_path_LISA).exists(): 
