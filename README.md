@@ -21,7 +21,12 @@
 
 `WILD SAM` inherits the requirements of `OpenPCDet`. Please refer to the [Installation Guide](docs/INSTALL.md) for environment setup, including `PyTorch`, `spconv`, and the Other required packages.
 
----
+To clone this repository (including all submodules such as DALI and LISA), use:
+
+```
+git clone --recurse-submodules https://github.com/Kh-Hamed/WILD-SAM
+
+```
 
 ## Dataset Preparation (MSU FourSeasons)
 
