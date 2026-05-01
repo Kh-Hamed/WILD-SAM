@@ -1,3 +1,6 @@
 [submodule "DALI"]
 	path = DALI
 	url = https://github.com/Kh-Hamed/DALI.git
+[submodule "LISA"]
+	path = LISA
+	url = https://github.com/Kh-Hamed/LISA.git
