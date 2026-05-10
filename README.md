@@ -5,7 +5,7 @@
 `WILD SAM` is an advanced 3D object detection framework built upon the [`OpenPCDet`](https://github.com/open-mmlab/OpenPCDet) codebase. It is specifically designed to enhance perception robustness in autonomous driving systems operating under challenging weather conditions (snow, rain) through a novel simulated-and-real data augmentation strategy.
 
 **Official Implementation of:**
-> [**WILD SAM: A Simulated-and-Real Data Augmentation for Autonomous Driving Perception under Challenging Weather**](https://arxiv.org/abs/2403.xxxxx)  
+> [**WILD SAM: A Simulated-and-Real Data Augmentation for Autonomous Driving Perception under Challenging Weather**](https://arxiv.org/abs/2605.01081)  
 > *Hamed Khatounabadi, Xiaohu Lu, Hayder Radha* > **IEEE Intelligent Vehicles (IV) 2026**
 
 ---
@@ -292,12 +292,22 @@ python tools/test.py --cfg_file tools/cfgs/FS_models/voxel_rcnn.yaml \
 ## Citation
 If you find this project useful for your research, please cite
 
-@inproceedings{khatounabadi2026wild,<br>
+@misc{khatounabadi2026wildsamsimulatedandrealdata,<br>
+      title={WILD SAM: A Simulated-and-Real Data Augmentation for Autonomous Driving Perception under Challenging Weather}, <br>
+      author={Hamed Khatounabadi and Xiaohu Lu and Hayder Radha},<br>
+      year={2026},<br>
+      eprint={2605.01081},<br>
+      archivePrefix={arXiv},<br>
+      primaryClass={cs.CV},<br>
+      url={https://arxiv.org/abs/2605.01081}, <br>
+}
+
+<!-- @inproceedings{khatounabadi2026wild,<br>
   title={WILD SAM: A Simulated-and-Real Data Augmentation for Autonomous Driving Perception under Challenging Weather},<br>
   author={Khatounabadi Hamed, Lu Xiaohu , Radha Hayder},<br>
   booktitle={2026 IEEE Intelligent Vehicles Symposium (IV)},<br>
   year={2026}
-}
+} -->
 
 To explore more recent perception-related projects, please visit the Wireless And Video Communications Lab [WAVES](https://www.egr.msu.edu/waves/) at Michigan State University.
 
